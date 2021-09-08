@@ -7,6 +7,8 @@ Created on Tue Sep  7 10:18:07 2021
 from numpy import *
 from matplotlib.pyplot import *
 
+
+#hejhej
 class cubic_spline:
     def __init__(self, grid, control_points):
         self.grid = grid
