@@ -4,7 +4,10 @@ Created on Tue Sep  7 10:18:07 2021
 
 """
 from numpy import *
+from matplotlib import pyplot as plt
+import numpy as np
 from matplotlib.pyplot import *
+from test_points_2 import control_points_2, grid_2
 
 
 class CubicSpline:
@@ -66,21 +69,63 @@ class CubicSpline:
             de_Boor_x = [self.control_points[i][0] for i in range(len(self.control_points))]
             de_Boor_y = [self.control_points[i][1] for i in range(len(self.control_points))]             
             plot(de_Boor_x, de_Boor_y, linestyle = 'dashed' )
+        plt.show()
+        plt.close()
             
-            
-        
-if __name__ =='__main__':       
-    control_points = array([[-1,5],[2,-1],[3,-2],[3,1],[6,3],[1,2],[-1,2],[-2,0]])
+
+def basis_functions(grid, i, k = 3):
+    if k == 0:
+        #return basis
+        return lambda u : 0 if (grid[i-1] == grid[i]) else (1 if grid[i-1] <= u < grid[i] else 0)
+    return lambda u: (u - grid[i-1]) / (grid[i+k-1] - grid[i-1]) * basis_functions (grid, i, k-1) \
+                    + (grid[i+k] -u ) / (grid[i+k] - grid[i]) * basis_functions(grid, i+1, k-1) 
     
-    m = 10
-    grid = zeros(m)
-    grid[3:-3] = linspace(0,1,m-6)
-    grid[0:3] = -0.1
-    grid[-3:m] = 1.1
+class BasisFunction():
+    def __init__(self, grid, i, k = 3, factor = 1):
+        self.grid = grid
+        self.i = i
+        self.k = k
+        self.factor = factor
+    
+    def __call__(self):
+        k = self.k
+        grid = self.grid
+        i = self.i
+        factor = self.factor
+        
+        if self.k == 0:
+            return lambda u : 0 if (grid[i-1] == grid[i]) else (factor if grid[i-1] <= u < grid[i] else 0)
+        else:
+            return lambda u: (u - grid[i-1]) / (grid[i+k-1] - grid[i-1]) * self.__call__() \
+                    + (grid[i+k] -u ) / (grid[i+k] - grid[i]) * self.__call__()
+    
+    def __mul__(self, scale):
+        self.factor = self.factor * scale
+
+
+
+if __name__ =='__main__':       
+    #control_points = array([[-1,5],[2,-1],[3,-2],[3,1],[6,3],[1,2],[-1,2],[-2,0]])
+    control_points = control_points_2
+    grid = grid_2
     
     spline = CubicSpline(grid, control_points)
     sol = spline()
-    spline.plot(sol, True)
+    #spline.plot(sol, True)
+    #plt.close()
+    N1 = BasisFunction(grid, 5, k = 3)
+    #N1 =  basis_functions(grid, 5, k = 1)
+    uvec = linspace(grid[2], grid[-3], 1000)
+    #print(grid[16])
+    base = []
+    for i in linspace(0,1,1000):
+        base.append(N1(i))
+    print(base)
+
+
+    
+    
+
         
         
 #vectorize?
