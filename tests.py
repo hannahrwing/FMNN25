@@ -1,4 +1,4 @@
-from cubic_spline import CubicSpline
+from cubic_spline import CubicSpline, basis_function
 from numpy import *
 import unittest
 from test_points_2 import control_points_2, grid_2
@@ -6,7 +6,7 @@ class Test(unittest.TestCase):
     
     def setUp(self) -> None:
         self.spline = CubicSpline(grid_2, control_points_2)
-        self.basis_functions = [self.spline.basis_function(i) for i in range(len(self.spline.control_points))]
+        self.basis_functions = [basis_function(i,grid_2) for i in range(len(self.spline.control_points))]
     
     def test_unity(self):
         basis_functions = self.basis_functions
@@ -44,10 +44,11 @@ class Test(unittest.TestCase):
             
     def test_evaluate_point(self):
         spline = self.spline
-        u = float64(0.2)
+        u = 0.2
         expected = array([-31.90219167, 6.47655833])
         result = spline.blossom(u)
-        self.assertListEqual(list(result), list(expected))
+        self.assertAlmostEqual(expected[0], result[0])
+        self.assertAlmostEqual(expected[1], result[1])
     
 if __name__ == '__main__':
     unittest.main()

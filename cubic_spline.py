@@ -17,15 +17,11 @@ class CubicSpline:
         grid = sort(grid)
         self.grid = grid
         self.control_points = control_points
-        self.padded_grid = insert(self.grid, 0, 0)
-        self.padded_grid = append(self.padded_grid, 1.1)
+
         
     def __call__(self):
         uvec = linspace(self.grid[2], self.grid[-3], 1000)
-        sol = zeros((len(uvec), 2))
-        
-        for i in range(len(uvec)):
-            sol[i,:] = self.blossom(uvec[i])
+        sol = [self.blossom(u) for u in uvec]
     
         return sol
     
@@ -74,31 +70,34 @@ class CubicSpline:
         plt.show()
         plt.close()
         
-    def basis_function(self, i, k = 3):
-        padded_grid = self.padded_grid
         
-        if k == 3:
-            i = i+1 #Because of the padded grid
+def basis_function(i, grid, k = 3):
+    if k==3:
+        grid = insert(grid, 0, 0)
+        grid = append(grid, grid[-1]+1)
+        i = i+1 #Because of the padded grid
+    
+    def base_case_function(u):
+        return 0 if (grid[i-1] == grid[i]) else (1 if grid[i-1] <= u < grid[i] else 0)
+    
+    if k == 0:
+        return base_case_function
+    else:
+        def iteration_function(u):
+            if grid[i+k-1] == grid[i-1]: #hmmm
+                factor_1 = 0
+            else:
+                factor_1 = (u - grid[i-1]) / (grid[i+k-1] - grid[i-1])
+                
+            if grid[i+k] == grid[i]:
+                factor_2 = 0
+            else:
+                factor_2 = (grid[i+k] - u ) / (grid[i+k] - grid[i])
+            return factor_1 * basis_function(i, grid, k-1)(u) + factor_2 * basis_function(i+1, grid, k-1)(u)
+        return iteration_function
         
-        def basecasefunction(u):
-            return 0 if (padded_grid[i-1] == padded_grid[i]) else (1 if padded_grid[i-1] <= u < padded_grid[i] else 0)
-        if k == 0:
-            return basecasefunction
-        else:
-            def iterationfunction(u):
-                if padded_grid[i+k-1] == padded_grid[i-1]:
-                    factor_1 = 0
-                else:
-                    factor_1 = (u - padded_grid[i-1]) / (padded_grid[i+k-1] - padded_grid[i-1])
-                    
-                if padded_grid[i+k] == padded_grid[i]:
-                    factor_2 = 0
-                else:
-                    factor_2 = (padded_grid[i+k] - u ) / (padded_grid[i+k] - padded_grid[i])
-                return factor_1 * self.basis_function(i, k-1)(u) + factor_2 * self.basis_function(i+1, k-1)(u)
-            return iterationfunction
-        
-        
+
+
             
 
 # def basis_functions(grid, i, k = 3, factor = 1):
@@ -146,20 +145,13 @@ if __name__ =='__main__':
     spline = CubicSpline(grid, control_points)
     sol = spline()
     
-    N5 = spline.basis_function(23)
+    N5 = spline.basis_function(15)
     x = linspace(0, 1, 1000)
     y = [N5(u) for u in x]
     plot(x,y)
-
-
-    
-    
-
         
         
 #vectorize?
-#blossom recursive?
-#private help methods?
 #inheritance?
 #plot method parameters
         
