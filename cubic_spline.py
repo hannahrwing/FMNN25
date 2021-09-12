@@ -14,9 +14,11 @@ class CubicSpline:
     def __init__(self, grid, control_points):
         if not len(grid) == len(control_points) + 2:
             raise Exception("# of grid points are expected to be 2 more than # of control points")
-        #sort grid?    
+        grid = sort(grid)
         self.grid = grid
         self.control_points = control_points
+        self.padded_grid = insert(self.grid, 0, 0)
+        self.padded_grid = append(self.padded_grid, 1.1)
         
     def __call__(self):
         uvec = linspace(self.grid[2], self.grid[-3], 1000)
@@ -71,6 +73,32 @@ class CubicSpline:
             plot(de_Boor_x, de_Boor_y, linestyle = 'dashed' )
         plt.show()
         plt.close()
+        
+    def basis_function(self, i, k = 3):
+        padded_grid = self.padded_grid
+        
+        if k == 3:
+            i = i+1 #Because of the padded grid
+        
+        def basecasefunction(u):
+            return 0 if (padded_grid[i-1] == padded_grid[i]) else (1 if padded_grid[i-1] <= u < padded_grid[i] else 0)
+        if k == 0:
+            return basecasefunction
+        else:
+            def iterationfunction(u):
+                if padded_grid[i+k-1] == padded_grid[i-1]:
+                    factor_1 = 0
+                else:
+                    factor_1 = (u - padded_grid[i-1]) / (padded_grid[i+k-1] - padded_grid[i-1])
+                    
+                if padded_grid[i+k] == padded_grid[i]:
+                    factor_2 = 0
+                else:
+                    factor_2 = (padded_grid[i+k] - u ) / (padded_grid[i+k] - padded_grid[i])
+                return factor_1 * self.basis_function(i, k-1)(u) + factor_2 * self.basis_function(i+1, k-1)(u)
+            return iterationfunction
+        
+        
             
 
 # def basis_functions(grid, i, k = 3, factor = 1):
@@ -81,33 +109,33 @@ class CubicSpline:
 #     return lambda u: (u - grid[i-1]) / (grid[i+k-1] - grid[i-1]) * basis_functions(grid, i, k-1) \
 #                     + (grid[i+k] -u ) / (grid[i+k] - grid[i]) * basis_functions(grid, i+1, k-1) 
     
-def basis_functions(grid, i, k = 3, factor = 1):
-    if k == 0:
-        #return basis
-        return lambda u : 0 if (grid[i-1] == grid[i]) else (factor if grid[i-1] <= u < grid[i] else 0)
+# def basis_functions(grid, i, k = 3, factor = 1):
+#     if k == 0:
+#         #return basis
+#         return lambda u : 0 if (grid[i-1] == grid[i]) else (factor if grid[i-1] <= u < grid[i] else 0)
     
-    else:
-        factor_1 = lambda u: (u - grid[i-1]) / (grid[i+k-1] - grid[i-1])
-        factor_2 = lambda u: (grid[i+k] -u ) / (grid[i+k] - grid[i])
-        return basis_functions(grid,i,k-1,factor = factor) + basis_functions(grid, i+1, k-1, factor = factor)
+#     else:
+#         factor_1 = lambda u: (u - grid[i-1]) / (grid[i+k-1] - grid[i-1])
+#         factor_2 = lambda u: (grid[i+k] -u ) / (grid[i+k] - grid[i])
+#         return basis_functions(grid,i,k-1,factor = factor) + basis_functions(grid, i+1, k-1, factor = factor)
 
-class BasisFunctions():
-    def __init__(self, grid, i, k):
-        self.i = i
-        self.grid = grid
-        self.k = k
+# class BasisFunctions():
+#     def __init__(self, grid, i, k):
+#         self.i = i
+#         self.grid = grid
+#         self.k = k
 
-    def __call__(self, u):
-        grid = self.grid
-        k = self.k
-        i = self.i
+#     def __call__(self, u):
+#         grid = self.grid
+#         k = self.k
+#         i = self.i
         
-        if k == 0:
-            return 0 if (grid[i-1] == grid[i]) else (1 if grid[i-1] <= u < grid[i] else 0)
-        else:
-            factor_1 = (u - grid[i-1]) / (grid[i+k-1] - grid[i-1])
-            factor_2 = (grid[i+k] - u ) / (grid[i+k] - grid[i])
-            return BasisFunctions(grid,i,k-1)(u) * factor_1 + BasisFunctions(grid, i+1, k-1)(u) * factor_2
+#         if k == 0:
+#             return 0 if (grid[i-1] == grid[i]) else (1 if grid[i-1] <= u < grid[i] else 0)
+#         else:
+#             factor_1 = (u - grid[i-1]) / (grid[i+k-1] - grid[i-1])
+#             factor_2 = (grid[i+k] - u ) / (grid[i+k] - grid[i])
+#             return BasisFunctions(grid,i,k-1)(u) * factor_1 + BasisFunctions(grid, i+1, k-1)(u) * factor_2
 
 
 if __name__ =='__main__':       
@@ -117,19 +145,11 @@ if __name__ =='__main__':
     
     spline = CubicSpline(grid, control_points)
     sol = spline()
-    #spline.plot(sol, True)
-    #plt.close()
-    N1 = BasisFunctions(grid, 5, k = 3)
-    #N1 =  basis_functions(grid, 5, k = 1)
-    uvec = linspace(grid[2], grid[-3], 1000)
-    #print(grid[16])
-    basefs = []
-    for i in linspace(0,1,1000):
-        base = N1(i)
-        basefs.append(base)
-    print(basefs)
-    plt.plot(basefs)
-    plt.show()
+    
+    N5 = spline.basis_function(23)
+    x = linspace(0, 1, 1000)
+    y = [N5(u) for u in x]
+    plot(x,y)
 
 
     
