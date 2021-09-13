@@ -3,11 +3,14 @@
 Created on Tue Sep  7 10:18:07 2021
 
 """
+import unittest
 from numpy import *
 from matplotlib import pyplot as plt
 import numpy as np
 from matplotlib.pyplot import *
 from test_points_2 import control_points_2, grid_2
+import os
+
 
 
 class CubicSpline:
@@ -21,7 +24,7 @@ class CubicSpline:
         
     def __call__(self):
         uvec = linspace(self.grid[2], self.grid[-3], 1000)
-        sol = [self.blossom(u) for u in uvec]
+        sol = array([list(self.blossom(u)) for u in uvec])
     
         return sol
     
@@ -97,60 +100,23 @@ def basis_function(i, grid, k = 3):
         return iteration_function
         
 
-
-            
-
-# def basis_functions(grid, i, k = 3, factor = 1):
-#     if k == 0:
-#         #return basis
-#         return lambda u : 0 if (grid[i-1] == grid[i]) else (1 if grid[i-1] <= u < grid[i] else 0)
-    
-#     return lambda u: (u - grid[i-1]) / (grid[i+k-1] - grid[i-1]) * basis_functions(grid, i, k-1) \
-#                     + (grid[i+k] -u ) / (grid[i+k] - grid[i]) * basis_functions(grid, i+1, k-1) 
-    
-# def basis_functions(grid, i, k = 3, factor = 1):
-#     if k == 0:
-#         #return basis
-#         return lambda u : 0 if (grid[i-1] == grid[i]) else (factor if grid[i-1] <= u < grid[i] else 0)
-    
-#     else:
-#         factor_1 = lambda u: (u - grid[i-1]) / (grid[i+k-1] - grid[i-1])
-#         factor_2 = lambda u: (grid[i+k] -u ) / (grid[i+k] - grid[i])
-#         return basis_functions(grid,i,k-1,factor = factor) + basis_functions(grid, i+1, k-1, factor = factor)
-
-# class BasisFunctions():
-#     def __init__(self, grid, i, k):
-#         self.i = i
-#         self.grid = grid
-#         self.k = k
-
-#     def __call__(self, u):
-#         grid = self.grid
-#         k = self.k
-#         i = self.i
-        
-#         if k == 0:
-#             return 0 if (grid[i-1] == grid[i]) else (1 if grid[i-1] <= u < grid[i] else 0)
-#         else:
-#             factor_1 = (u - grid[i-1]) / (grid[i+k-1] - grid[i-1])
-#             factor_2 = (grid[i+k] - u ) / (grid[i+k] - grid[i])
-#             return BasisFunctions(grid,i,k-1)(u) * factor_1 + BasisFunctions(grid, i+1, k-1)(u) * factor_2
-
-
 if __name__ =='__main__':       
     #control_points = array([[-1,5],[2,-1],[3,-2],[3,1],[6,3],[1,2],[-1,2],[-2,0]])
     control_points = control_points_2
     grid = grid_2
-    
     spline = CubicSpline(grid, control_points)
+    basis_functions = [basis_function(i,grid) for i in range(5,20)]
+    N1 = basis_function(5,grid,k=3)
     sol = spline()
-    
-    N5 = spline.basis_function(15)
     x = linspace(0, 1, 1000)
-    y = [N5(u) for u in x]
-    plot(x,y)
-        
-        
+    y = [[basis_functions[i](u) for u in x] for i in range(len(basis_functions))]
+    figure()
+    for i in range(len(y)):
+        plt.plot(x,y[i])
+    figure()
+    spline.plot(sol, de_Boor=True)
+    os.system("python -m unittest discover")
+    plt.show(block=False)
 #vectorize?
 #inheritance?
 #plot method parameters

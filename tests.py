@@ -4,7 +4,7 @@ import unittest
 from test_points_2 import control_points_2, grid_2
 class Test(unittest.TestCase):
     
-    def setUp(self) -> None:
+    def setUp(self):
         self.spline = CubicSpline(grid_2, control_points_2)
         self.basis_functions = [basis_function(i,grid_2) for i in range(len(self.spline.control_points))]
     
