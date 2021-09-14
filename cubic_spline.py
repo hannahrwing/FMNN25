@@ -28,15 +28,19 @@ class CubicSpline:
     
         return sol
     
-    def blossom(self,u):
-        index = self._hot_interval(u)
+    def blossom(self,u,index_given = False, index = 0):
+        if(not index_given):
+            index = self._hot_interval(u)
         d = self.get_control_points(index)
-        dA = self._interpolation(d[0], d[1], u, index-2, index+1)
+        dA = self._interpolation(d[0], d[1], u, index-2, index+1) 
         dB = self._interpolation(d[1], d[2], u, index-1, index+2)
         dC = self._interpolation(d[2], d[3], u, index, index+3)
-        dAB = self._interpolation(dA, dB, u, index-1, index+1)
+        dAB = self._interpolation(dA, dB, u, index-1, index+1) 
         dBC = self._interpolation(dB, dC, u, index, index+2)
-        return self._interpolation(dAB, dBC, u, index, index+1)
+        if(index_given):
+            return [dAB, dA, d[0]]
+        else:
+            return self._interpolation(dAB, dBC, u, index, index+1)
         
         
     def _interpolation(self,d1,d2,u,leftmost,rightmost):
@@ -61,15 +65,36 @@ class CubicSpline:
     def get_control_points(self,index):
         return self.control_points[index-2:index+2]
     
-    def plot(self, sol, de_Boor = False):
+    def plot(self, sol, de_Boor = False, addon_blossoms = False, addon_index = 0):
         x = sol[:,0]
         y = sol[:,1]
         plot(x, y)
         
+        leg = ["Spline"]
+        
+        if(addon_blossoms):
+            
+            uvec = linspace(self.grid[addon_index-2], self.grid[addon_index+2], 100)
+            d_points = array([list(self.blossom(u, True, addon_index)) for u in uvec])
+            
+            dAB_x = [d_point[0, 0] for d_point in d_points]
+            dAB_y = [d_point[0, 1] for d_point in d_points]
+           
+            dA_x = [d_point[1, 0] for d_point in d_points]
+            dA_y = [d_point[1, 1] for d_point in d_points]
+            
+            plot(dAB_x, dAB_y, color='red')
+            plot(dA_x, dA_y, color='cyan')
+            plot(d_points[0][2,0],d_points[0][2,1], marker='*' )
+            leg.extend(("d[u, u, u$_i$]", "d[u, u$_{i-1}$, u$_i$]", "d[u$_{i-2}$, u$_{i-1}$, u$_i$]"))
+            
         if(de_Boor):
             de_Boor_x = [self.control_points[i][0] for i in range(len(self.control_points))]
             de_Boor_y = [self.control_points[i][1] for i in range(len(self.control_points))]             
             plot(de_Boor_x, de_Boor_y, linestyle = 'dashed' )
+            leg.append("Control points")
+        
+        legend(leg)
         plt.show()
         plt.close()
         
@@ -114,7 +139,7 @@ if __name__ =='__main__':
     for i in range(len(y)):
         plt.plot(x,y[i])
     figure()
-    spline.plot(sol, de_Boor=True)
+    spline.plot(sol, de_Boor=True, addon_blossoms=True, addon_index=5)
     os.system("python -m unittest discover")
     plt.show(block=False)
 #vectorize?
