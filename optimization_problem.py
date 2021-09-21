@@ -22,7 +22,7 @@ class OptimizationProblem:
         Z = np.array(100*(Y-X**2)**2 + (1-X)**2)
         
         N = 24
-        big = linspace(20.1,1250, num = 10)
+        big = linspace(20.1,1250, num = 5)
         small = linspace(0,3, num = 7)
         medium = linspace(3.1,20, num = 10)
         levels = np.concatenate((small, big), axis = 0)
