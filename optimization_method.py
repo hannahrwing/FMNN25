@@ -14,7 +14,7 @@ class OptimizationMethod:
         H = self.defualt_hessian(x0, problem.func)
         x, H = self.step(H, x0, problem)
         x_old = x0
-        tol = 1e-20
+        tol = 1e-15
         steps = [x_old]
         while linalg.norm(problem.gradient(x)) > tol and linalg.norm(x-x_old) > tol:
             
@@ -158,6 +158,18 @@ class GoodBroyden(Newton):
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
             
         H = H_prev + (delta - H_prev @ gamma) / (delta.T @ H_prev @ gamma) @ delta.T @ H_prev
+        
+        return H
+
+class BadBroyden(Newton):
+    
+    def hessian(self, x, x_old, problem, H_prev):
+        delta, gamma = self.get_gamma_delta(x, x_old, problem)
+        
+        H = H_prev + (delta - H_prev @ gamma)/(gamma.T @ gamma) @ gamma.T
+        
+        return H
+        
         
         
         

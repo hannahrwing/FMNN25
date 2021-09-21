@@ -2,7 +2,7 @@
 
 from numpy import *
 from matplotlib.pyplot import *
-from optimization_method import ClassicNewton, BFGS
+from optimization_method import ClassicNewton, BFGS, GoodBroyden, BadBroyden
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
@@ -58,8 +58,8 @@ if __name__ == '__main__':
     # problem.plot(interval,steps)
     interval = [linspace(-0.7, 2, num=1000), linspace(-1.5, 4, num = 1000)]
     problem = OptimizationProblem(f, grad)
-    method = BFGS(False)
+    method = BadBroyden(True)
     x0 = [0.5,3]
     sol, steps = method(problem, x0)
-    print(steps)
+    print(sol)
     problem.plot(interval,steps)
