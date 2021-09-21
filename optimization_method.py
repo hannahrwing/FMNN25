@@ -11,27 +11,22 @@ class OptimizationMethod:
         
         
     def __call__(self, problem, x0):
-        print(x0)
-        H = self.hessian(x0, problem.func)
-        x,H = self.step(H, x0, problem)
-        print(x)
+        H = self.defualt_hessian(x0, problem.func)
+        x, H = self.step(H, x0, problem)
         x_old = x0
-        tol = 1e-5
+        tol = 1e-20
         steps = [x_old]
         while linalg.norm(problem.gradient(x)) > tol and linalg.norm(x-x_old) > tol:
+            
             x_old = x
             x, H = self.step(H, x, problem)
             steps = np.vstack((steps, x_old))
-    
         return x, steps
     def step(self):
         raise NotImplementedError()
         
-
-    
     
 class Newton(OptimizationMethod):
-    
     
     
     def step(self, H, x, problem):
@@ -45,9 +40,28 @@ class Newton(OptimizationMethod):
         else:
             alpha = self.inexact_search(x, s, problem.func)
         x_new = x + alpha*s
-        H_new = self.hessian(x_new, problem.func, H) #xnew? said x before
+        #H_new = self.hessian( x_new, problem.func, H) #xnew? said x before
+        H_new = self.hessian(x, x_new, problem, H) #xnew? said x before
         return x_new, H_new
     
+    def defualt_hessian(self, x, f):
+       n = len(x)
+       G = zeros((n,n))
+       h = 1e-3
+       
+       for i in range(n):
+           for j in range(n):
+               G[i,j] = (f(x + h*self._basisvec(n,(i,j),(1,1))) - f(x + h*self._basisvec(n,(i,j), (1,-1)))
+                         - f(x + h*self._basisvec(n,(i,j),(-1,1))) + f(x + h*self._basisvec(n,(i,j),(-1,-1))))/(4*h**2)
+       G = (G + G.T)/2
+       return linalg.inv(G)
+   
+    def _basisvec(self, n, i, val):
+        v = zeros(n)
+        v[i[0]] += val[0]
+        v[i[1]] += val[1]
+        return v
+   
     def hessian(self):
         raise NotImplementedError()
         
@@ -62,8 +76,8 @@ class Newton(OptimizationMethod):
     
     def inexact_search(self, x, s, f):
         #Powell-Wolfe
-        sigma = 1e-2
-        rho = 0.9
+        sigma = 0.4999
+        rho = 0.99999999
         alpha_minus = 2
         phi = self.phi_func(x, s, f)
         
@@ -86,7 +100,6 @@ class Newton(OptimizationMethod):
                 alpha_minus = alpha_0
             else:
                 alpha_plus = alpha_0
-                
         return alpha_minus
             
         
@@ -115,3 +128,24 @@ class ClassicNewton(Newton):
         v[i[0]] += val[0]
         v[i[1]] += val[1]
         return v
+
+
+class BFGS(Newton):
+    
+    def hessian(self, x_old, x, problem, H_prev):
+        tol = 1e-5
+        delta = np.reshape(x - x_old, (len(x),1))
+        if problem.gradient == None:
+            pass
+            #Calculate pls
+        gamma = np.reshape(np.array(problem.gradient(x)) - np.array(problem.gradient(x_old)), (len(x),1))
+        if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
+            return np.eye(len(x))
+    
+        first = (1 + gamma.T @ H_prev @ gamma / (delta.T @ gamma) ) * delta @ delta.T / (delta.T @ gamma)
+        second = (delta @ gamma.T @ H_prev + H_prev @ gamma @ delta.T) / (delta.T @ gamma)
+        H = H_prev + first - second
+        return H
+        
+        
+        

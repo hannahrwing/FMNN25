@@ -2,10 +2,11 @@
 
 from numpy import *
 from matplotlib.pyplot import *
-from optimization_method import ClassicNewton
+from optimization_method import ClassicNewton, BFGS
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
+
 
 class OptimizationProblem:
     
@@ -26,13 +27,14 @@ class OptimizationProblem:
         small = linspace(0,3, num = 7)
         medium = linspace(3.1,20, num = 10)
         levels = np.concatenate((small, big), axis = 0)
-    
-        cp = ax.contour(X, Y, 100*(Y-X**2)**2 + (1-X)**2, levels=levels,
+        Z = 100*(Y-X**2)**2 + (1-X)**2
+        cp = ax.contour(X, Y, Z, levels=levels,
                         colors = 'black')
+
         plt.clabel(cp, inline=1, fontsize=10)
         plt.setp(cp.collections , linewidth=0.75)
-        plt.plot(steps[0], steps[1], linestyle = 'dashed', marker = 'o',
-                 markersize = 2, color = 'black')
+        plt.plot(steps[:,0], steps[:,1], linestyle = 'dashed', marker = 'o',
+                 markersize = 2, color = 'red')
         plt.xlim((interval[0][0], interval[0][len(interval[0])-1]))
         plt.ylim((interval[1][0], interval[1][len(interval[1])-1]))
         plt.show()
@@ -47,15 +49,17 @@ def grad(x):
     
 if __name__ == '__main__':
     
-    problem = OptimizationProblem(f, grad)
-    method = ClassicNewton()
-    x0 = [0,-0.8]
-    sol, steps = method(problem, x0)
-    print(sol)
-    steps = np.transpose((np.array(steps)))
+    # problem = OptimizationProblem(f, grad)
+    # method = ClassicNewton()
+    # x0 = [0.5,3]
+    # sol, steps = method(problem, x0)
+    # print(sol)
+    # interval = [linspace(-0.7, 2, num=1000), linspace(-1.5, 4, num = 1000)]
+    # problem.plot(interval,steps)
     interval = [linspace(-0.7, 2, num=1000), linspace(-1.5, 4, num = 1000)]
+    problem = OptimizationProblem(f, grad)
+    method = BFGS(False)
+    x0 = [0.5,3]
+    sol, steps = method(problem, x0)
+    print(steps)
     problem.plot(interval,steps)
-    method = ClassicNewton(False)
-    x0 = [0,-0.8]
-    sol = method(problem, x0)
-    print(sol)
