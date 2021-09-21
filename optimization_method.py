@@ -8,22 +8,29 @@ class OptimizationMethod:
         
     def __init__(self, exact_line_search = True):
         self.exact_line_search = exact_line_search
-    
+        
+        
     def __call__(self, problem, x0):
         H = self.hessian(x0, problem.func)
         x,H = self.step(H, x0, problem)
         x_old = x0
         tol = 1e-5
+        steps = [x_old]
         while linalg.norm(problem.gradient(x)) > tol and linalg.norm(x-x_old) > tol:
             x_old = x
             x, H = self.step(H, x, problem)
-        return x
+            steps = np.vstack((steps, x_old))
     
+        return x, steps
     def step(self):
         raise NotImplementedError()
+        
+
     
     
 class Newton(OptimizationMethod):
+    
+    
     
     def step(self, H, x, problem):
         if problem.gradient == None:
@@ -52,6 +59,7 @@ class Newton(OptimizationMethod):
 
 
 class ClassicNewton(Newton):
+    
     
     def hessian(self, x, f, H_prev = None):
         n = len(x)
