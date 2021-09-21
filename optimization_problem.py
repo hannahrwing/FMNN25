@@ -55,3 +55,7 @@ if __name__ == '__main__':
     steps = np.transpose((np.array(steps)))
     interval = [linspace(-0.7, 2, num=1000), linspace(-1.5, 4, num = 1000)]
     problem.plot(interval,steps)
+    method = ClassicNewton(False)
+    x0 = [0,-0.8]
+    sol = method(problem, x0)
+    print(sol)
