@@ -13,3 +13,4 @@ Write something for getting gradient for general function
 Do task 10, 11 and 12
 Structure code better
 Add a gitignore 
+Restructure files
