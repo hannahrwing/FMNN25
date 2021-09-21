@@ -14,7 +14,7 @@ class OptimizationMethod:
         H = self.defualt_hessian(x0, problem.func)
         x, H = self.step(H, x0, problem)
         x_old = x0
-        tol = 1e-15
+        tol = 1e-20
         steps = [x_old]
         while linalg.norm(problem.gradient(x)) > tol and linalg.norm(x-x_old) > tol:
             
@@ -169,7 +169,9 @@ class DFP(Newton):
         if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
             return np.eye(len(x))
         
-        return H
+        first = delta @ delta.T / (delta.T @ gamma)
+        second = H_prev @ gamma @ gamma.T @ H_prev / (gamma.T @ H_prev @ gamma)
+        return H_prev + first - second 
 
 class BadBroyden(Newton):
     
@@ -180,10 +182,6 @@ class BadBroyden(Newton):
         
         return H
         
-        
-        first = delta @ delta.T / (delta.T @ gamma)
-        second = H_prev @ gamma @ gamma.T @ H_prev / (gamma.T @ H_prev @ gamma)
-        return H_prev + first - second 
     
 class SymmetricBroyden(Newton):
     
