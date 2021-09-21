@@ -24,7 +24,7 @@ def grad(x):
 if __name__ == '__main__':
     
     problem = OptimizationProblem(f, grad)
-    method = ClassicNewton()
-    x0 = [4,-800]
+    method = ClassicNewton(False)
+    x0 = [0,-0.8]
     sol = method(problem, x0)
     print(sol)
