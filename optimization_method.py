@@ -158,6 +158,16 @@ class GoodBroyden(Newton):
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
             
         H = H_prev + (delta - H_prev @ gamma) / (delta.T @ H_prev @ gamma) @ delta.T @ H_prev
+        return H
+        
+        
+class DFP(Newton):
+    
+    def hessian(self, x_old, x, problem, H_prev):
+        tol = 1e-5
+        delta, gamma = self.get_gamma_delta(x, x_old, problem)
+        if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
+            return np.eye(len(x))
         
         return H
 
@@ -171,5 +181,23 @@ class BadBroyden(Newton):
         return H
         
         
+        first = delta @ delta.T / (delta.T @ gamma)
+        second = H_prev @ gamma @ gamma.T @ H_prev / (gamma.T @ H_prev @ gamma)
+        return H_prev + first - second 
+    
+class SymmetricBroyden(Newton):
+    
+    def hessian(self, x_old, x, problem, H_prev):
+        tol = 1e-5
+        delta, gamma = self.get_gamma_delta(x, x_old, problem)
+        if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
+            return np.eye(len(x))
         
-        
+        u = delta - H_prev @ gamma
+        a = 1 / (u.T @ gamma)
+        return H_prev  + a * u.T @ u
+    
+    
+
+
+    
