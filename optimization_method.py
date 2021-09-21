@@ -101,7 +101,14 @@ class Newton(OptimizationMethod):
             else:
                 alpha_plus = alpha_0
         return alpha_minus
-            
+    
+    def get_gamma_delta(self, x, x_old, problem):
+        delta = np.reshape(x - x_old, (len(x),1))
+        if problem.gradient == None:
+                pass
+                #Calculate pls
+        gamma = np.reshape(np.array(problem.gradient(x)) - np.array(problem.gradient(x_old)), (len(x),1))
+        return delta, gamma
         
     def derivative(self, f, x):
         h = 1e-5
@@ -134,11 +141,9 @@ class BFGS(Newton):
     
     def hessian(self, x_old, x, problem, H_prev):
         tol = 1e-5
-        delta = np.reshape(x - x_old, (len(x),1))
-        if problem.gradient == None:
-            pass
-            #Calculate pls
-        gamma = np.reshape(np.array(problem.gradient(x)) - np.array(problem.gradient(x_old)), (len(x),1))
+        
+        delta, gamma = self.get_gamma_delta(x, x_old, problem)
+        
         if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
             return np.eye(len(x))
     
@@ -146,6 +151,13 @@ class BFGS(Newton):
         second = (delta @ gamma.T @ H_prev + H_prev @ gamma @ delta.T) / (delta.T @ gamma)
         H = H_prev + first - second
         return H
+    
+class GoodBroyden(Newton):
+    
+    def hessian(self, x, x_old, problem, H_prev):
+        delta, gamma = self.get_gamma_delta(x, x_old, problem)
+            
+        H = H_prev + (delta - H_prev @ gamma) / (delta.T @ H_prev @ gamma) @ delta.T @ H_prev
         
         
         
