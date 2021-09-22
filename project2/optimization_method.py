@@ -14,7 +14,7 @@ class OptimizationMethod:
         H = self.defualt_hessian(x0, problem.func)
         x, H = self.step(H, x0, problem)
         x_old = x0
-        tol = 1e-20
+        tol = 1e-35
         steps = [x_old]
         while linalg.norm(problem.gradient(x)) > tol and linalg.norm(x-x_old) > tol:
             
@@ -51,6 +51,7 @@ class Newton(OptimizationMethod):
        
        for i in range(n):
            for j in range(n):
+
                G[i,j] = (f(x + h*self._basisvec(n,(i,j),(1,1))) - f(x + h*self._basisvec(n,(i,j), (1,-1)))
                          - f(x + h*self._basisvec(n,(i,j),(-1,1))) + f(x + h*self._basisvec(n,(i,j),(-1,-1))))/(4*h**2)
        G = (G + G.T)/2
@@ -118,7 +119,10 @@ class Newton(OptimizationMethod):
 class ClassicNewton(Newton):
     
     
-    def hessian(self, x, f, H_prev = None):
+    def hessian(self, x_old, x, f, H_prev = None):
+        
+        return self.defualt_hessian(x, f)
+        
         n = len(x)
         G = zeros((n,n))
         h = 1e-3
