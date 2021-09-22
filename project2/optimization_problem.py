@@ -13,6 +13,7 @@ import random
 
 
 
+
 class OptimizationProblem:
     
     def __init__(self, func, gradient = None):
@@ -51,8 +52,8 @@ def rosenbrock(x):
     
 def grad_rosenbrock(x):
     return [-400*(x[1]-x[0]**2)*x[0] - 2*(1-x[0]), 200*(x[1]-x[0]**2)]    
-    
-if __name__ == '__main__':
+
+def test_rosebrock():
     methods = [GoodBroyden(True, name = 'Good Broyden'), BadBroyden(True, name = 'Bad Broyden'),
                      SymmetricBroyden(True, name = 'Symmetric Broyden'), DFP(True, name = 'DFP'),
                      BFGS(True, name = 'BFGS'), GoodBroyden(False, name = 'Good Broyden'),
@@ -75,12 +76,14 @@ if __name__ == '__main__':
             df_rosenbrock['Minima'][i] = np.round(df_rosenbrock['Minima'][i],2)
         else:
             df_rosenbrock['Minima'][i] = None
-        df_rosenbrock['Real Minima'][i] = np.round(so.fmin_bfgs(rosenbrock,x0, grad_rosenbrock),5)
+        df_rosenbrock['Real Minima'][i] = np.round(so.fmin_bfgs(rosenbrock,x0, grad_rosenbrock, disp=False),5)
         df_rosenbrock['Starting Point'][i] = np.round(x0,2)
         problem.plot(interval,steps, title = df_rosenbrock['Method'][i] + " " + df_rosenbrock['Exact/Inexact'][i])
     pd.options.display.max_columns = None
     pd.set_option("display.max_rows", None)
-    #df_rosenbrock = df_rosenbrock.fillna(value="Does not Converge")
+    df_rosenbrock = df_rosenbrock.fillna(value="Does not Converge")
     print('Rosenbrock Function')
     display(df_rosenbrock)
-    
+
+if __name__ == '__main__':
+    test_rosebrock()

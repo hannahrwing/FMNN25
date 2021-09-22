@@ -6,13 +6,6 @@ from scipy.optimize import minimize
 import signal
 import time
 
-class TimeOutException(Exception):
-   pass
-
-def alarm_handler(signum, frame):
-    print("ALARM signal received")
-    raise TimeOutException()
-
 class OptimizationMethod:
         
     def __init__(self, exact_line_search = True, name = None):
@@ -24,17 +17,12 @@ class OptimizationMethod:
         H = self.defualt_hessian(x0, problem.func)
         x, H = self.step(H, x0, problem)
         x_old = x0
-        tol = 1e-35
+        tol = 1e-20
         steps = [x_old]
-        signal.signal(signal.SIGALRM, alarm_handler)
-        signal.alarm(8)
-        try:
-            while linalg.norm(problem.gradient(x)) > tol and linalg.norm(x-x_old) > tol:
-                x_old = x
-                x, H = self.step(H, x, problem)
-                steps = np.vstack((steps, x_old))
-        except TimeOutException as ex:
-            return None, steps
+        while linalg.norm(problem.gradient(x)) > tol and linalg.norm(x-x_old) > tol:
+            x_old = x
+            x, H = self.step(H, x, problem)
+            steps = np.vstack((steps, x_old))
         return x, steps
     def step(self):
         raise NotImplementedError()
@@ -52,6 +40,7 @@ class Newton(OptimizationMethod):
         if self.exact_line_search:
             alpha = self.exact_search(x, s, problem.func)
         else:
+    
             alpha = self.inexact_search(x, s, problem.func)
         x_new = x + alpha*s
         #H_new = self.hessian( x_new, problem.func, H) #xnew? said x before
@@ -91,8 +80,8 @@ class Newton(OptimizationMethod):
     
     def inexact_search(self, x, s, f):
         #Powell-Wolfe
-        sigma = 0.4999
-        rho = 0.99999999
+        sigma = 1e-2
+        rho = 0.9
         alpha_minus = 2
         phi = self.phi_func(x, s, f)
         
