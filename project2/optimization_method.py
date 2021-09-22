@@ -3,11 +3,21 @@
 from numpy import *
 from matplotlib.pyplot import *
 from scipy.optimize import minimize
+import signal
+import time
+
+class TimeOutException(Exception):
+   pass
+
+def alarm_handler(signum, frame):
+    print("ALARM signal received")
+    raise TimeOutException()
 
 class OptimizationMethod:
         
-    def __init__(self, exact_line_search = True):
+    def __init__(self, exact_line_search = True, name = None):
         self.exact_line_search = exact_line_search
+        self.name = name
         
         
     def __call__(self, problem, x0):
@@ -16,11 +26,15 @@ class OptimizationMethod:
         x_old = x0
         tol = 1e-35
         steps = [x_old]
-        while linalg.norm(problem.gradient(x)) > tol and linalg.norm(x-x_old) > tol:
-            
-            x_old = x
-            x, H = self.step(H, x, problem)
-            steps = np.vstack((steps, x_old))
+        signal.signal(signal.SIGALRM, alarm_handler)
+        signal.alarm(8)
+        try:
+            while linalg.norm(problem.gradient(x)) > tol and linalg.norm(x-x_old) > tol:
+                x_old = x
+                x, H = self.step(H, x, problem)
+                steps = np.vstack((steps, x_old))
+        except TimeOutException as ex:
+            return None, steps
         return x, steps
     def step(self):
         raise NotImplementedError()
