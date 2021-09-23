@@ -1,4 +1,10 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Created on Thu Sep 23 10:52:01 2021
+
+@author: nils
+"""
 
 from numpy import *
 from matplotlib.pyplot import *
@@ -42,11 +48,7 @@ class Newton(OptimizationMethod):
     
     
     def step(self, H, x, problem):
-        if problem.gradient == None:
-            #calculate it
-            pass
-        else:
-            s = -H @ problem.gradient(x)
+        s = -H @ problem.gradient(x)
         if self.exact_line_search:
             alpha = self.exact_search(x, s, problem.func)
         else:
@@ -118,9 +120,6 @@ class Newton(OptimizationMethod):
     
     def get_gamma_delta(self, x, x_old, problem):
         delta = np.reshape(x - x_old, (len(x),1))
-        if problem.gradient == None:
-                pass
-                #Calculate pls
         gamma = np.reshape(np.array(problem.gradient(x)) - np.array(problem.gradient(x_old)), (len(x),1))
         return delta, gamma
         
@@ -197,8 +196,3 @@ class SymmetricBroyden(Newton):
         u = delta - H_prev @ gamma
         a = 1 / (u.T @ gamma)
         return H_prev  + a * u.T @ u
-    
-    
-
-
-    

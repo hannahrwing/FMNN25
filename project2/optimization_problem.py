@@ -17,7 +17,10 @@ class OptimizationProblem:
     
     def __init__(self, func, gradient = None):
         self.func = func
-        self.gradient = gradient
+        if gradient is None:
+            self.gradient = self.default_grad
+        else:
+            self.gradient = gradient
     
     def plot(self, interval, steps, title = None):
         
@@ -43,6 +46,20 @@ class OptimizationProblem:
         plt.ylim((interval[1][0], interval[1][len(interval[1])-1]))
         plt.title(title)
         plt.show()
+    
+    def default_grad(self, x):
+        h = 1e-5
+        grad = empty(len(x))
+        
+        for i in range(len(x)):
+            x_plus =  x.copy() 
+            x_min = x.copy()
+            x_plus[i] += h
+            x_min[i] -= h 
+            grad[i] = (self.func(x_plus) - self.func(x_min))/(2*h)
+            
+        return grad
+    
 
 def rosenbrock(x):
     return 100*(x[1]-x[0]**2)**2 + (1-x[0])**2
@@ -52,9 +69,9 @@ def grad_rosenbrock(x):
 
 
 if __name__ == '__main__':
-    problem1 = OptimizationProblem(rosenbrock, grad_rosenbrock)
+    problem1 = OptimizationProblem(rosenbrock)
     test1 = Test(problem1, name = "Rosenbrock")
-    problem2 = OptimizationProblem(cqp.chebyquad, cqp.gradchebyquad)
+    problem2 = OptimizationProblem(cqp.chebyquad)
     test2 = Test(problem2, name = "Chebyquad")
     test1.test()
     test2.test(num_points=4)

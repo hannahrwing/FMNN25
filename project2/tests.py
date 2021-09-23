@@ -42,7 +42,7 @@ class Test():
         if num_points != 2:
             x0 = linspace(0,1,num_points)
         else:
-            x0 = [0.5, 3]
+            x0 = [-0.5, 3]
         
         for i in range(len(methods)):
             
