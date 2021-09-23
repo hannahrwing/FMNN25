@@ -11,6 +11,7 @@ import pandas as pd
 import scipy.optimize as so
 import random 
 from tests import Test
+from scipy import stats
 
 class OptimizationProblem:
     
@@ -42,7 +43,7 @@ class OptimizationProblem:
         plt.ylim((interval[1][0], interval[1][len(interval[1])-1]))
         plt.title(title)
         plt.show()
-    
+
 def rosenbrock(x):
     return 100*(x[1]-x[0]**2)**2 + (1-x[0])**2
     
@@ -52,10 +53,23 @@ def grad_rosenbrock(x):
 
 if __name__ == '__main__':
     problem1 = OptimizationProblem(rosenbrock, grad_rosenbrock)
-    test1 = Test(problem1)
+    test1 = Test(problem1, name = "Rosenbrock")
     problem2 = OptimizationProblem(cqp.chebyquad, cqp.gradchebyquad)
-    test2 = Test(problem2)
+    test2 = Test(problem2, name = "Chebyquad")
     test1.test()
     test2.test(num_points=4)
+    hes_problem = OptimizationProblem(rosenbrock, grad_rosenbrock)
+    method = DFP(True, calc_hes=True)
+    _,_,hessians, default_hessians = method(hes_problem, [-10, 5])
+    hessians = np.array(hessians)
+    default_hessians = np.array(default_hessians)
+    norms = [np.linalg.norm(x) for x in (hessians - default_hessians)[1:]]
+    norms_d = [np.linalg.norm(x) for x in default_hessians]
     
-    
+    loged =  np.log(norms)
+    plt.plot(loged)
+    plt.ylabel('Differance in norms')
+    plt.xlabel("k")
+    slope, intercept, r_value, p_value, std_err = stats.linregress(list(range(len(norms))),loged)
+    x = linspace(0,len(loged))
+    plt.plot(x,intercept + slope * x)

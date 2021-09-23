@@ -22,12 +22,14 @@ def get_all_methods():
 
 class Test():
     
-    def __init__(self, problem, methods = None):
+    def __init__(self, problem, methods = None, name = ""):
         self.problem = problem
+        self.name = name
         if methods == None:
             self.methods = get_all_methods()
+        
              
-    def test(self, num_points = 0):
+    def test(self, num_points = 2):
         methods = self.methods
         df = pd.DataFrame({'Method' : [x.name for x in methods],
                            'Exact/Inexact' : ["Exact" if x.exact_line_search
@@ -37,7 +39,7 @@ class Test():
                            'Real Minima' : None})
         problem = self.problem
         
-        if num_points != 0:
+        if num_points != 2:
             x0 = linspace(0,1,num_points)
         else:
             x0 = [0.5, 3]
@@ -59,5 +61,5 @@ class Test():
         pd.set_option("display.max_rows", None)
         pd.set_option("display.max_columns", None)
         df = df.fillna(value="Does not Converge")
-        print('Chebyquad Function')
+        print(self.name)
         display(df)
