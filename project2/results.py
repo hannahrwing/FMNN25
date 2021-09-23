@@ -5,12 +5,18 @@ Created on Thu Sep 23 08:53:36 2021
 
 @author: nils
 """
-import pandas as pd
 from numpy import *
-import numpy as np
+from matplotlib.pyplot import *
 from optimization_method import ClassicNewton, BFGS, DFP, GoodBroyden, SymmetricBroyden, BadBroyden
-import scipy.optimize as so
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+import numpy as np
 import chebyquad_problem as cqp
+import pandas as pd
+import scipy.optimize as so
+import random 
+from tests import Test
+from scipy import stats
 
 def get_all_methods():
     return [ClassicNewton(True, name = 'Classic Newton'), GoodBroyden(True, name = 'Good Broyden'),
@@ -20,7 +26,7 @@ def get_all_methods():
            BadBroyden(False, name = 'Bad Broyden'), SymmetricBroyden(False, name = 'Symmetric Broyden'),
            DFP(False, name = 'DFP'), BFGS(False, name = 'BFGS')]
 
-class Test():
+class Results():
     
     def __init__(self, problem, methods = None, name = ""):
         self.problem = problem
@@ -29,7 +35,7 @@ class Test():
             self.methods = get_all_methods()
         
              
-    def test(self, num_points = 2):
+    def show_plots_and_tables(self, num_points = 2):
         methods = self.methods
         df = pd.DataFrame({'Method' : [x.name for x in methods],
                            'Exact/Inexact' : ["Exact" if x.exact_line_search
@@ -64,4 +70,19 @@ class Test():
         print(self.name)
         display(df)
         
+    def hessian_diff(self):
+        method = BFGS(True, calc_hes=True)
+        _,_,hessians, default_hessians = method(self.problem, [-10, 5])
+        hessians = np.array(hessians)
+        default_hessians = np.array(default_hessians)
+        norms = [np.linalg.norm(x) for x in (hessians - default_hessians)[1:]]
+        norms_d = [np.linalg.norm(x) for x in default_hessians]
+        loged =  np.log(norms)
+        plt.plot(loged)
+        plt.ylabel('Differance in norms')
+        plt.xlabel("k")
+        slope, intercept, r_value, p_value, std_err = stats.linregress(list(range(len(norms))),loged)
+        x = linspace(0,len(loged))
+        plt.plot(x,intercept + slope * x)
+    
         

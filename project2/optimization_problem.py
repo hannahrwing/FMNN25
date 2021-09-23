@@ -11,6 +11,7 @@ import pandas as pd
 import scipy.optimize as so
 import random 
 from tests import Test
+from results import Results
 from scipy import stats
 
 class OptimizationProblem:
@@ -70,23 +71,15 @@ def grad_rosenbrock(x):
 
 if __name__ == '__main__':
     problem1 = OptimizationProblem(rosenbrock)
-    test1 = Test(problem1, name = "Rosenbrock")
-    problem2 = OptimizationProblem(cqp.chebyquad)
-    test2 = Test(problem2, name = "Chebyquad")
-    test1.test()
-    test2.test(num_points=4)
-    hes_problem = OptimizationProblem(rosenbrock, grad_rosenbrock)
-    method = DFP(True, calc_hes=True)
-    _,_,hessians, default_hessians = method(hes_problem, [-10, 5])
-    hessians = np.array(hessians)
-    default_hessians = np.array(default_hessians)
-    norms = [np.linalg.norm(x) for x in (hessians - default_hessians)[1:]]
-    norms_d = [np.linalg.norm(x) for x in default_hessians]
+    result1 = Results(problem1, name = "Rosenbrock")
+    result1.show_plots_and_tables()
     
-    loged =  np.log(norms)
-    plt.plot(loged)
-    plt.ylabel('Differance in norms')
-    plt.xlabel("k")
-    slope, intercept, r_value, p_value, std_err = stats.linregress(list(range(len(norms))),loged)
-    x = linspace(0,len(loged))
-    plt.plot(x,intercept + slope * x)
+    problem2 = OptimizationProblem(cqp.chebyquad)
+    result2 = Results(problem2, name = "Chebyquad")
+    result2.show_plots_and_tables(num_points=4)
+
+    hes_problem = OptimizationProblem(rosenbrock, grad_rosenbrock) 
+    result3 = Results(hes_problem, name = "Hessian diff")
+    result3.hessian_diff()
+    
+    
