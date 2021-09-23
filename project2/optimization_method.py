@@ -17,7 +17,7 @@ class OptimizationMethod:
         H = self.default_hessian(x0, problem.func)
         x, H = self.step(H, x0, problem)
         x_old = x0
-        tol = 1e-35
+        tol = 1e-20
         steps = [x_old]
         if self.calc_hes:
             hessians = [H]
@@ -42,18 +42,13 @@ class Newton(OptimizationMethod):
     
     
     def step(self, H, x, problem):
-        if problem.gradient == None:
-            #calculate it
-            pass
-        else:
-            s = -H @ problem.gradient(x)
+        s = -H @ problem.gradient(x)
         if self.exact_line_search:
             alpha = self.exact_search(x, s, problem.func)
         else:
     
             alpha = self.inexact_search(x, s, problem.func)
         x_new = x + alpha*s
-        #H_new = self.hessian( x_new, problem.func, H) #xnew? said x before
         H_new = self.hessian(x, x_new, problem, H) #xnew? said x before
         return x_new, H_new
     
@@ -118,9 +113,6 @@ class Newton(OptimizationMethod):
     
     def get_gamma_delta(self, x, x_old, problem):
         delta = np.reshape(x - x_old, (len(x),1))
-        if problem.gradient == None:
-                pass
-                #Calculate pls
         gamma = np.reshape(np.array(problem.gradient(x)) - np.array(problem.gradient(x_old)), (len(x),1))
         return delta, gamma
         
@@ -131,21 +123,14 @@ class Newton(OptimizationMethod):
 
 class ClassicNewton(Newton):
     
-    
     def hessian(self, x_old, x, problem, H_prev = None):
-        
         return self.default_hessian(x, problem.func)
         
 
 class BFGS(Newton):
     
     def hessian(self, x_old, x, problem, H_prev):
-        tol = 1e-5
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
-        
-        if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
-            return np.eye(len(x))
-    
         first = (1 + gamma.T @ H_prev @ gamma / (delta.T @ gamma) ) * delta @ delta.T / (delta.T @ gamma)
         second = (delta @ gamma.T @ H_prev + H_prev @ gamma @ delta.T) / (delta.T @ gamma)
         H = H_prev + first - second
@@ -154,10 +139,7 @@ class BFGS(Newton):
 class GoodBroyden(Newton):
     
     def hessian(self, x, x_old, problem, H_prev):
-        tol = 1e-5
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
-        if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
-            return np.eye(len(x))
         H = H_prev + (delta - H_prev @ gamma) / (delta.T @ H_prev @ gamma) @ delta.T @ H_prev
         return H
         
@@ -165,11 +147,7 @@ class GoodBroyden(Newton):
 class DFP(Newton):
     
     def hessian(self, x_old, x, problem, H_prev):
-        tol = 1e-5
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
-        if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
-            return np.eye(len(x))
-        
         first = delta @ delta.T / (delta.T @ gamma)
         second = H_prev @ gamma @ gamma.T @ H_prev / (gamma.T @ H_prev @ gamma)
         return H_prev + first - second 
@@ -177,10 +155,7 @@ class DFP(Newton):
 class BadBroyden(Newton):
     
     def hessian(self, x, x_old, problem, H_prev):
-        tol = 1e-5
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
-        if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
-            return np.eye(len(x))
         H = H_prev + (delta - H_prev @ gamma)/(gamma.T @ gamma) @ gamma.T
         
         return H
@@ -189,11 +164,7 @@ class BadBroyden(Newton):
 class SymmetricBroyden(Newton):
     
     def hessian(self, x_old, x, problem, H_prev):
-        tol = 1e-5
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
-        if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
-            return np.eye(len(x))
-        
         u = delta - H_prev @ gamma
         a = 1 / (u.T @ gamma)
         return H_prev  + a * u.T @ u
