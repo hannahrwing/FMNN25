@@ -1,4 +1,10 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Created on Thu Sep 23 10:52:01 2021
+
+@author: nils
+"""
 
 from numpy import *
 from matplotlib.pyplot import *
@@ -168,8 +174,3 @@ class SymmetricBroyden(Newton):
         u = delta - H_prev @ gamma
         a = 1 / (u.T @ gamma)
         return H_prev  + a * u.T @ u
-    
-    
-
-
-    

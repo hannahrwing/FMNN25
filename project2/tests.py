@@ -27,8 +27,9 @@ class Test():
         self.name = name
         if methods == None:
             self.methods = get_all_methods()
-        
-             
+        else:
+            self.methods = methods
+            
     def test(self, num_points = 2):
         methods = self.methods
         df = pd.DataFrame({'Method' : [x.name for x in methods],
@@ -42,7 +43,7 @@ class Test():
         if num_points != 2:
             x0 = linspace(0,1,num_points)
         else:
-            x0 = [0.5, 3]
+            x0 = [0.5, 1.2]
         
         for i in range(len(methods)):
             
@@ -55,7 +56,7 @@ class Test():
             df['Starting Points'][i] = np.round(x0,2)
             
             if len(x0)==2:
-                interval = [linspace(-0.7, 2, num=1000), linspace(-1.5, 4, num = 1000)]
+                interval = [linspace(-0.7, 3.5, num=1000), linspace(-1, 6, num = 1000)]
                 problem.plot(interval,steps, title = df['Method'][i] + " " + df['Exact/Inexact'][i])
         pd.options.display.max_columns = None
         pd.set_option("display.max_rows", None)
