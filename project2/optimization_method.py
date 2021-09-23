@@ -14,7 +14,7 @@ class OptimizationMethod:
         
         
     def __call__(self, problem, x0):
-        H = self.defualt_hessian(x0, problem.func)
+        H = self.default_hessian(x0, problem.func)
         x, H = self.step(H, x0, problem)
         x_old = x0
         tol = 1e-20
@@ -47,7 +47,7 @@ class Newton(OptimizationMethod):
         H_new = self.hessian(x, x_new, problem, H) #xnew? said x before
         return x_new, H_new
     
-    def defualt_hessian(self, x, f):
+    def default_hessian(self, x, f):
        n = len(x)
        G = zeros((n,n))
        h = 1e-3
@@ -122,33 +122,15 @@ class Newton(OptimizationMethod):
 class ClassicNewton(Newton):
     
     
-    def hessian(self, x_old, x, f, H_prev = None):
+    def hessian(self, x_old, x, problem, H_prev = None):
         
-        return self.defualt_hessian(x, f)
+        return self.default_hessian(x, problem.func)
         
-        n = len(x)
-        G = zeros((n,n))
-        h = 1e-3
-        
-        for i in range(n):
-            for j in range(n):
-                G[i,j] = (f(x + h*self._basisvec(n,(i,j),(1,1))) - f(x + h*self._basisvec(n,(i,j), (1,-1)))
-                          - f(x + h*self._basisvec(n,(i,j),(-1,1))) + f(x + h*self._basisvec(n,(i,j),(-1,-1))))/(4*h**2)
-        G = (G + G.T)/2
-        return linalg.inv(G)
-    
-    def _basisvec(self, n, i, val):
-        v = zeros(n)
-        v[i[0]] += val[0]
-        v[i[1]] += val[1]
-        return v
-
 
 class BFGS(Newton):
     
     def hessian(self, x_old, x, problem, H_prev):
         tol = 1e-5
-        
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
         
         if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
@@ -162,8 +144,10 @@ class BFGS(Newton):
 class GoodBroyden(Newton):
     
     def hessian(self, x, x_old, problem, H_prev):
+        tol = 1e-5
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
-            
+        if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
+            return np.eye(len(x))
         H = H_prev + (delta - H_prev @ gamma) / (delta.T @ H_prev @ gamma) @ delta.T @ H_prev
         return H
         
@@ -183,8 +167,10 @@ class DFP(Newton):
 class BadBroyden(Newton):
     
     def hessian(self, x, x_old, problem, H_prev):
+        tol = 1e-5
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
-        
+        if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
+            return np.eye(len(x))
         H = H_prev + (delta - H_prev @ gamma)/(gamma.T @ gamma) @ gamma.T
         
         return H
