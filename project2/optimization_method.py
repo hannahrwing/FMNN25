@@ -38,7 +38,7 @@ class OptimizationMethod:
         Parameters
         ----------
         problem : OptimizationProblem
-            DESCRIPTION.
+            The optimization problem that is to be solved.
         x0 : np.ndarray
             initial guess
 
