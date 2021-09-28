@@ -11,6 +11,7 @@ import pandas as pd
 import scipy.optimize as so
 import random 
 from tests import Test
+from results import Results
 from scipy import stats
 
 class OptimizationProblem:
@@ -23,7 +24,6 @@ class OptimizationProblem:
             self.gradient = gradient
     
     def plot(self, interval, steps, title = None):
-        
         mpl.rcParams['figure.dpi'] = 300
         fig, ax = plt.subplots(1,1)
         X, Y = np.meshgrid(interval[0], interval[1])
@@ -74,38 +74,42 @@ def rosenbrock(x):
 def grad_rosenbrock(x):
     return [-400*(x[1]-x[0]**2)*x[0] - 2*(1-x[0]), 200*(x[1]-x[0]**2)]    
 
+def booth(x):
+    return (x[0] + 2 * x[1] - 7)**2 + (2*x[0] + x[1] - 5)**2
+
+def beale(x):
+    return (1.5 - x[0] + x[0] * x[1])**2 + (2.25 - x[0] + x[0] * x[1]**2)**2 + (2.625 - x[0] + x[0]*  x[1]**3)**2
+
+def sphere(x):
+    return x[1]**2 + x[0]**2
+
 
 if __name__ == '__main__':
-    # problem1 = OptimizationProblem(rosenbrock)
-    # test1 = Test(problem1, name = "Rosenbrock")
-    # problem2 = OptimizationProblem(cqp.chebyquad)
-    # test2 = Test(problem2, name = "Chebyquad")
-    # test1.test()
-    # test2.test(num_points=4)
-    # problem3 = OptimizationProblem(sphere)
-    # test3 = Test(problem3, name = "Sphere")
-    # test3.test()
-    # problem4 = OptimizationProblem(beale)
-    # test4 = Test(problem4, name = "Beale", methods = [BFGS(True, name = 'BFGS')])
-    # test4.test()
-    problem5 = OptimizationProblem(booth)
-    test5 = Test(problem5, name = "Booth", methods = [BFGS(True, name = 'BFGS')])
-    test5.test()
+    problem1 = OptimizationProblem(rosenbrock)
+    result1 = Results(problem1, name = "Rosenbrock")
+    result1.show_plots_and_tables()
+    
+    hes_problem = OptimizationProblem(rosenbrock, grad_rosenbrock) 
+    result3 = Results(hes_problem, name = "Hessian diff")
+    result3.hessian_diff_2()
+    
+    problem2 = OptimizationProblem(cqp.chebyquad)
+    result2 = Results(problem2, name = "Chebyquad")
+    result2.show_plots_and_tables(num_points=4)
+
+    problem3 = OptimizationProblem(booth)
+    result3 = Results(problem3, name = "Booth")
+    result3.show_plots_and_tables()
+    
+    problem4 = OptimizationProblem(sphere)
+    result4 = Results(problem4, name = "Sphere")
+    result4.show_plots_and_tables()
+
+    problem5 = OptimizationProblem(beale)
+    result5 = Results(problem5, name = "Beale")
+    result5.show_plots_and_tables()
+
     
     
     
-    # hes_problem = OptimizationProblem(rosenbrock, grad_rosenbrock)
-    # method = BFGS(True, calc_hes=True)
-    # _,_,hessians, default_hessians = method(hes_problem, [-10, 5])
-    # hessians = np.array(hessians)
-    # default_hessians = np.array(default_hessians)
-    # norms = [np.linalg.norm(x) for x in (hessians - default_hessians)[1:]]
-    # norms_d = [np.linalg.norm(x) for x in default_hessians]
     
-    # loged =  np.log(norms)
-    # plt.plot(loged)
-    # plt.ylabel('Differance in norms')
-    # plt.xlabel("k")
-    # slope, intercept, r_value, p_value, std_err = stats.linregress(list(range(len(norms))),loged)
-    # x = linspace(0,len(loged))
-    # plt.plot(x,intercept + slope * x)

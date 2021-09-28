@@ -64,3 +64,5 @@ class Test():
         df = df.fillna(value="Does not Converge")
         print(self.name)
         display(df)
+        
+        
