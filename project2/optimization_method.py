@@ -15,10 +15,20 @@ import time
 class OptimizationMethod:
         
     def __init__(self, exact_line_search = True, calc_hes = False):
+        """
+        Creates an optimization method which uses either
+        exact or inexact line search.
+        """
         self.exact_line_search = exact_line_search
         self.calc_hes = calc_hes
         
     def __call__(self, problem, x0):
+        """
+        Optimizes the function in the problem starting from
+        the guessed point x0. 
+        Returns the x value for a local minima and the steps
+        taken to reach it.
+        """
         x, H = None, None
         for x, H in self.generate(problem, x0):
             pass
@@ -51,6 +61,13 @@ class OptimizationMethod:
 class Newton(OptimizationMethod):
     
     def step(self, H, x, problem):
+        """
+        Uses the hessian matrix and the x-vector to take
+        the next step towards optimizing the function.
+        Does not matter whether the gradient is defined
+        in the problem class or not.
+        Returns the new x-vector x_new and the new hessian matrix.
+        """
         s = -H @ problem.gradient(x)
         if self.exact_line_search:
             alpha = self.exact_search(x, s, problem.func)
@@ -62,6 +79,10 @@ class Newton(OptimizationMethod):
         return x_new, H_new
     
     def default_hessian(self, x, f):
+       """
+        Calculates and returns the deafult hessian matrix by
+        using finite differences.
+        """
        n = len(x)
        G = zeros((n,n))
        h = 1e-3
@@ -75,6 +96,11 @@ class Newton(OptimizationMethod):
        return linalg.inv(G)
    
     def _basisvec(self, n, i, val):
+        """
+        A help-function to calculate the deafult_hessian.
+        Creates and returns an n-vectors with the values val
+        in positions i.
+        """
         v = zeros(n)
         v[i[0]] += val[0]
         v[i[1]] += val[1]
@@ -84,15 +110,27 @@ class Newton(OptimizationMethod):
         raise NotImplementedError()
         
     def exact_search(self, x, s, f):
+        """
+        Performs an exact search to return the most
+        suitable alpha to take the next step.
+        """
         
         return minimize(self.phi_func(x,s,f), 0).x
     
     def phi_func(self, x, s ,f):
+        """
+        Returns the phi function defined as f(x+alpha*s)
+        """
         def phi(alpha):
             return f(x + alpha*s)
         return phi
     
     def inexact_search(self, x, s, f):
+        """
+        Performs an inexact search to return a suitable
+        alpha to take the next step. This is executed
+        utilizing the Powel-Wolfe conditions.
+        """
         #Powell-Wolfe
         sigma = 1e-2
         rho = 0.9
@@ -121,11 +159,24 @@ class Newton(OptimizationMethod):
         return alpha_minus
     
     def get_gamma_delta(self, x, x_old, problem):
+        """
+        Determines and returns the gamma and delta parameters
+        which are used to calculate the hessians for the
+        different optimization methods.
+        Delta is the difference between two consecutive
+        x-vectors.
+        Gamma is the difference between two consecutive
+        gradients.
+        """
         delta = np.reshape(x - x_old, (len(x),1))
         gamma = np.reshape(np.array(problem.gradient(x)) - np.array(problem.gradient(x_old)), (len(x),1))
         return delta, gamma
         
     def derivative(self, f, x):
+        """
+        Differentiates the function f numerically in
+        the value x for the x-vector component i.
+        """
         h = 1e-5
         return (f(x+h) - f(x-h))/(2*h)
 
@@ -133,12 +184,20 @@ class Newton(OptimizationMethod):
 class ClassicNewton(Newton):
     
     def hessian(self, x_old, x, problem, H_prev = None):
+        """
+        Determines the hessian matrix used to
+        take the next step in the algorithm.
+        """
         return self.default_hessian(x, problem.func)
         
 
 class BFGS(Newton):
     
     def hessian(self, x_old, x, problem, H_prev):
+        """
+        Calculates the hessian to take the next step for
+        the BFGS method.
+        """
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
         first = (1 + gamma.T @ H_prev @ gamma / (delta.T @ gamma) ) * delta @ delta.T / (delta.T @ gamma)
         second = (delta @ gamma.T @ H_prev + H_prev @ gamma @ delta.T) / (delta.T @ gamma)
@@ -148,6 +207,10 @@ class BFGS(Newton):
 class GoodBroyden(Newton):
     
     def hessian(self, x, x_old, problem, H_prev):
+        """
+        Calculates the hessian to take the next step for
+        the Good Broyden method.
+        """
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
         H = H_prev + (delta - H_prev @ gamma) / (delta.T @ H_prev @ gamma) @ delta.T @ H_prev
         return H
@@ -156,14 +219,22 @@ class GoodBroyden(Newton):
 class DFP(Newton):
     
     def hessian(self, x_old, x, problem, H_prev):
+        """
+        Calculates the hessian to take the next step for
+        the DFP method.
+        """
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
         first = delta @ delta.T / (delta.T @ gamma)
         second = H_prev @ gamma @ gamma.T @ H_prev / (gamma.T @ H_prev @ gamma)
-        return H_prev + first - second 
+        return H_prev + first - (second)
 
 class BadBroyden(Newton):
     
     def hessian(self, x, x_old, problem, H_prev):
+        """
+        Calculates the hessian to take the next step for
+        the Bad Broyden method.
+        """
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
         H = H_prev + (delta - H_prev @ gamma)/(gamma.T @ gamma) @ gamma.T
         
@@ -173,6 +244,10 @@ class BadBroyden(Newton):
 class SymmetricBroyden(Newton):
     
     def hessian(self, x_old, x, problem, H_prev):
+        """
+        Calculates the hessian to take the next step for
+        the Symmetric Broyden method.
+        """
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
         u = delta - H_prev @ gamma
         a = 1 / (u.T @ gamma)
