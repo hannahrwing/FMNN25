@@ -25,7 +25,6 @@ class OptimizationMethod:
         Returns
         -------
         None.
-
         """
         self.exact_line_search = exact_line_search
         
@@ -41,12 +40,10 @@ class OptimizationMethod:
             The optimization problem that is to be solved.
         x0 : np.ndarray
             initial guess
-
         Returns
         -------
         x : np.ndarray
             point of optimum.
-
         """
         x, H = None, None
         for x, H in self.generate(problem, x0):
