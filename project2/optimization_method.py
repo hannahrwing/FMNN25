@@ -14,38 +14,41 @@ import time
 
 class OptimizationMethod:
         
-    def __init__(self, exact_line_search = True, name = None, calc_hes = False):
+    def __init__(self, exact_line_search = True, calc_hes = False):
         self.exact_line_search = exact_line_search
-        self.name = name
         self.calc_hes = calc_hes
         
     def __call__(self, problem, x0):
+        x, H = None, None
+        for x, H in self.generate(problem, x0):
+            pass
+        return x
+        
+    def generate(self, problem, x0, max_num_steps = 1e4):
         H = self.default_hessian(x0, problem.func)
+        yield x0, H
+        
         x, H = self.step(H, x0, problem)
+        yield list(x), H
+        
         x_old = x0
         tol = 1e-35
-        steps = [x_old]
-        if self.calc_hes:
-            hessians = [H]
-            default_hessians = [self.default_hessian(x0, problem.func)]
-        
+        num_steps = 0
         while linalg.norm(problem.gradient(x)) > tol and linalg.norm(x-x_old) > tol:
             x_old = x
             x, H = self.step(H, x, problem)
-            steps = np.vstack((steps, x_old))
-            if self.calc_hes:
-                hessians.append(H)
-                default_hessians.append(self.default_hessian(x,problem.func))
-        if self.calc_hes:
-            return x, steps, hessians, default_hessians
-        else:
-            return x, steps
+            if num_steps > max_num_steps:
+                yield list(x), H
+                raise Exception("Maximum steps exceeded. No minimum found")
+            num_steps += 1
+            yield list(x), H
+    
+    
     def step(self):
         raise NotImplementedError()
         
     
 class Newton(OptimizationMethod):
-    
     
     def step(self, H, x, problem):
         s = -H @ problem.gradient(x)
@@ -132,7 +135,6 @@ class ClassicNewton(Newton):
     
     
     def hessian(self, x_old, x, problem, H_prev = None):
-        
         return self.default_hessian(x, problem.func)
         
 

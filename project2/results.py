@@ -19,12 +19,12 @@ from tests import Test
 from scipy import stats
 
 def get_all_methods():
-    return [ClassicNewton(True, name = 'Classic Newton'), GoodBroyden(True, name = 'Good Broyden'),
-            BadBroyden(True, name = 'Bad Broyden'), SymmetricBroyden(True, name = 'Symmetric Broyden'),
-            DFP(True, name = 'DFP'), BFGS(True, name = 'BFGS'),
-            ClassicNewton(True, name = 'Classic Newton'),GoodBroyden(False, name = 'Good Broyden'),
-           BadBroyden(False, name = 'Bad Broyden'), SymmetricBroyden(False, name = 'Symmetric Broyden'),
-           DFP(False, name = 'DFP'), BFGS(False, name = 'BFGS')]
+    return [ClassicNewton(True), GoodBroyden(True),
+            BadBroyden(True), SymmetricBroyden(True),
+            DFP(True), BFGS(True),
+            ClassicNewton(True),GoodBroyden(False),
+           BadBroyden(False), SymmetricBroyden(False),
+           DFP(False), BFGS(False)]
 
 class Results():
     
@@ -37,7 +37,7 @@ class Results():
              
     def show_plots_and_tables(self, num_points = 2):
         methods = self.methods
-        df = pd.DataFrame({'Method' : [x.name for x in methods],
+        df = pd.DataFrame({'Method' : [type(x).__name__ for x in methods],
                            'Exact/Inexact' : ["Exact" if x.exact_line_search
                                               else "Inexact" for x in methods],
                            'Starting Points': None,
@@ -52,14 +52,18 @@ class Results():
         
         for i in range(len(methods)):
             
-            df['Minima'][i], steps = methods[i](problem, x0)
+            df['Minima'][i] = methods[i](problem, x0)
             if df['Minima'][i] is not None:
                 df['Minima'][i] = np.round(df['Minima'][i],4)
             else:
                 df['Minima'][i] = None
             df['Real Minima'][i] = df['Real Minima'][i] = np.round(so.fmin_bfgs(self.problem.func,x0, self.problem.gradient, disp=False),5)
             df['Starting Points'][i] = np.round(x0,2)
-            
+            #steps = list(methods[i].generate(self.problem,x0))
+            steps = np.array(x0)
+            for x, H in methods[i].generate(self.problem, x0):
+                steps = np.vstack((steps, x))
+            #steps = list(methods[i].generate(self.problem, x0))
             if len(x0)==2:
                 interval = [linspace(-0.7, 2, num=1000), linspace(-1.5, 4, num = 1000)]
                 problem.plot(interval,steps, title = df['Method'][i] + " " + df['Exact/Inexact'][i])
@@ -72,11 +76,11 @@ class Results():
         
     def hessian_diff(self):
         method = BFGS(True, calc_hes=True)
-        _,_,hessians, default_hessians = method(self.problem, [-10, 5])
+        _,_,hessians, d_hessians = method(self.problem, [-10, 5])
         hessians = np.array(hessians)
-        default_hessians = np.array(default_hessians)
-        norms = [np.linalg.norm(x) for x in (hessians - default_hessians)[1:]]
-        norms_d = [np.linalg.norm(x) for x in default_hessians]
+        d_hessians = np.array(d_hessians)
+        norms = [np.linalg.norm(x) for x in (hessians - d_hessians)[1:]]
+        norms_d = [np.linalg.norm(x) for x in d_hessians]
         loged =  np.log(norms)
         plt.plot(loged)
         plt.ylabel('Differance in norms')
@@ -84,5 +88,29 @@ class Results():
         slope, intercept, r_value, p_value, std_err = stats.linregress(list(range(len(norms))),loged)
         x = linspace(0,len(loged))
         plt.plot(x,intercept + slope * x)
-    
+        
+    def hessian_diff_2(self):
+        matplotlib.rcParams['mathtext.fontset'] = 'stix'
+        matplotlib.rcParams['font.family'] = 'STIXGeneral'
+        
+        
+        x0 = [-10, 5]
+        method = BFGS(True)
+        hessians = []
+        d_hessians = []
+        for x,h in method.generate(self.problem, x0):
+           hessians.append(h)
+           d_hessians.append(method.default_hessian(x, self.problem.func))
+           
+        hessians = np.array(hessians)
+        d_hessians = np.array(d_hessians)
+        norms = [np.linalg.norm(x) for x in (hessians - d_hessians)[1:]]
+        norms_d = [np.linalg.norm(x) for x in d_hessians]
+        loged =  np.log(norms)
+        plt.plot(loged)
+        plt.ylabel('$ln(|\Delta H|_{F}$)', fontsize = 18)
+        plt.xlabel("k")
+        slope, intercept, r_value, p_value, std_err = stats.linregress(list(range(len(norms))),loged)
+        x = linspace(0,len(loged))
+        plt.plot(x,intercept + slope * x)
         
