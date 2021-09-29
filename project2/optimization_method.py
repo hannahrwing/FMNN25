@@ -60,7 +60,7 @@ class OptimizationMethod:
             DESCRIPTION.
         max_num_steps : int, optional
             DESCRIPTION. Max number of steps until algorithm stops.
-            The default is 1e4.
+            The default is 1e5.
 
         Yields
         ------
@@ -77,8 +77,8 @@ class OptimizationMethod:
         yield list(x), H
         
         x_old = x0
-        tol1 = 1e-6
-        tol2 = 1e-14
+        tol1 = 1e-7
+        tol2 = 1e-15
         num_steps = 0
         while linalg.norm(problem.gradient(x)) > tol1 and linalg.norm(x-x_old) > tol2:
             x_old = x
@@ -252,9 +252,7 @@ class BFGS(Newton):
         Calculates the hessian to take the next step for
         the BFGS method.
         """
-        tol = 1e-6
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
-
     
         first = (1 + gamma.T @ H_prev @ gamma / (delta.T @ gamma) ) * delta @ delta.T / (delta.T @ gamma)
         second = (delta @ gamma.T @ H_prev + H_prev @ gamma @ delta.T) / (delta.T @ gamma)
@@ -268,7 +266,7 @@ class GoodBroyden(Newton):
         Calculates the hessian to take the next step for
         the Good Broyden method.
         """
-        tol = 1e-6
+
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
 
         H = H_prev + (delta - H_prev @ gamma) / (delta.T @ H_prev @ gamma) @ delta.T @ H_prev
@@ -282,7 +280,7 @@ class DFP(Newton):
         Calculates the hessian to take the next step for
         the DFP method.
         """
-        tol = 1e-6
+
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
 
         
@@ -297,7 +295,7 @@ class BadBroyden(Newton):
         Calculates the hessian to take the next step for
         the Bad Broyden method.
         """
-        tol = 1e-6
+
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
         H = H_prev + (delta - H_prev @ gamma)/(gamma.T @ gamma) @ gamma.T
         
@@ -311,7 +309,6 @@ class SymmetricBroyden(Newton):
         Calculates the hessian to take the next step for
         the Symmetric Broyden method.
         """
-        tol = 1e-6
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
 
         u = delta - H_prev @ gamma
