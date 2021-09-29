@@ -24,7 +24,7 @@ class OptimizationMethod:
             Determines if exact or inexact line search is to be used. The default is True.
         Returns
         -------
-        None.
+        OptimizationMethod.
         """
         self.exact_line_search = exact_line_search
         
@@ -32,8 +32,7 @@ class OptimizationMethod:
         """
         Optimizes the function in the problem starting from
         the guessed point x0. 
-        Returns the x value for a local minima and the steps
-        taken to reach it.
+        Returns the point for a local minima.
         Parameters
         ----------
         problem : OptimizationProblem
@@ -50,7 +49,27 @@ class OptimizationMethod:
             pass
         return x
         
-    def generate(self, problem, x0, max_num_steps = 1e4):
+    def generate(self, problem, x0, max_num_steps = 1e5):
+        """
+        Returns a generator for the steps takes towards the minimum
+
+        Parameters
+        ----------
+        problem : OptimizationProblem
+        x0 : array
+            DESCRIPTION.
+        max_num_steps : int, optional
+            DESCRIPTION. Max number of steps until algorithm stops.
+            The default is 1e4.
+
+        Yields
+        ------
+        TYPE
+            point.
+        H : TYPE
+            Hessian matrix.
+
+        """
         H = self.default_hessian(x0, problem.func)
         yield x0, H
         
@@ -58,9 +77,10 @@ class OptimizationMethod:
         yield list(x), H
         
         x_old = x0
-        tol = 1e-35
+        tol1 = 1e-6
+        tol2 = 1e-14
         num_steps = 0
-        while linalg.norm(problem.gradient(x)) > tol and linalg.norm(x-x_old) > tol:
+        while linalg.norm(problem.gradient(x)) > tol1 and linalg.norm(x-x_old) > tol2:
             x_old = x
             x, H = self.step(H, x, problem)
             if num_steps > max_num_steps:
@@ -102,13 +122,12 @@ class Newton(OptimizationMethod):
     
             alpha = self.inexact_search(x, s, problem.func)
         x_new = x + alpha*s
-        #H_new = self.hessian( x_new, problem.func, H) #xnew? said x before
-        H_new = self.hessian(x, x_new, problem, H) #xnew? said x before
+        H_new = self.hessian(x, x_new, problem, H)
         return x_new, H_new
     
     def default_hessian(self, x, f):
        """
-        Calculates and returns the deafult hessian matrix by
+        Calculates and returns the default hessian matrix by
         using finite differences.
         Parameters
         ----------
@@ -211,7 +230,7 @@ class Newton(OptimizationMethod):
         Differentiates the function f numerically in
         the value x for the x-vector component i.
         """
-        h = 1e-5
+        h = 1e-7
         return (f(x+h) - f(x-h))/(2*h)
 
 
@@ -233,11 +252,9 @@ class BFGS(Newton):
         Calculates the hessian to take the next step for
         the BFGS method.
         """
-        tol = 1e-5
+        tol = 1e-6
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
-        
-        if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
-            return np.eye(len(x))
+
     
         first = (1 + gamma.T @ H_prev @ gamma / (delta.T @ gamma) ) * delta @ delta.T / (delta.T @ gamma)
         second = (delta @ gamma.T @ H_prev + H_prev @ gamma @ delta.T) / (delta.T @ gamma)
@@ -251,10 +268,9 @@ class GoodBroyden(Newton):
         Calculates the hessian to take the next step for
         the Good Broyden method.
         """
-        tol = 1e-5
+        tol = 1e-6
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
-        if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
-            return np.eye(len(x))
+
         H = H_prev + (delta - H_prev @ gamma) / (delta.T @ H_prev @ gamma) @ delta.T @ H_prev
         return H
         
@@ -266,10 +282,9 @@ class DFP(Newton):
         Calculates the hessian to take the next step for
         the DFP method.
         """
-        tol = 1e-5
+        tol = 1e-6
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
-        if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
-            return np.eye(len(x))
+
         
         first = delta @ delta.T / (delta.T @ gamma)
         second = H_prev @ gamma @ gamma.T @ H_prev / (gamma.T @ H_prev @ gamma)
@@ -282,10 +297,8 @@ class BadBroyden(Newton):
         Calculates the hessian to take the next step for
         the Bad Broyden method.
         """
-        tol = 1e-5
+        tol = 1e-6
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
-        if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
-            return np.eye(len(x))
         H = H_prev + (delta - H_prev @ gamma)/(gamma.T @ gamma) @ gamma.T
         
         return H
@@ -298,11 +311,9 @@ class SymmetricBroyden(Newton):
         Calculates the hessian to take the next step for
         the Symmetric Broyden method.
         """
-        tol = 1e-5
+        tol = 1e-6
         delta, gamma = self.get_gamma_delta(x, x_old, problem)
-        if linalg.norm(gamma) < tol or linalg.norm(delta) < tol: #This is cheating, look in to if we can have it somewhere else
-            return np.eye(len(x))
-        
+
         u = delta - H_prev @ gamma
         a = 1 / (u.T @ gamma)
         return H_prev  + a * u.T @ u

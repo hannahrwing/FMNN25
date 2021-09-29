@@ -73,6 +73,9 @@ def beale(x):
 def sphere(x):
     return x[1]**2 + x[0]**2
 
+import warnings
+warnings.filterwarnings('ignore')
+
 
 if __name__ == '__main__':
     problem1 = OptimizationProblem(rosenbrock)

@@ -22,7 +22,7 @@ def get_all_methods():
     return [ClassicNewton(True), GoodBroyden(True),
             BadBroyden(True), SymmetricBroyden(True),
             DFP(True), BFGS(True),
-            ClassicNewton(True),GoodBroyden(False),
+            ClassicNewton(False),GoodBroyden(False),
            BadBroyden(False), SymmetricBroyden(False),
            DFP(False), BFGS(False)]
 
