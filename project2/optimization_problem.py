@@ -73,11 +73,15 @@ def beale(x):
 def sphere(x):
     return x[1]**2 + x[0]**2
 
+import warnings
+warnings.filterwarnings('ignore')
+
 
 if __name__ == '__main__':
     problem1 = OptimizationProblem(rosenbrock)
     result1 = Results(problem1, name = "Rosenbrock")
     result1.show_plots_and_tables()
+    
     
     hes_problem = OptimizationProblem(rosenbrock, grad_rosenbrock) 
     result3 = Results(hes_problem, name = "Hessian diff")
@@ -87,13 +91,13 @@ if __name__ == '__main__':
     result2 = Results(problem2, name = "Chebyquad")
     result2.show_plots_and_tables(num_points=4)
 
-    problem3 = OptimizationProblem(booth)
-    result3 = Results(problem3, name = "Booth")
-    result3.show_plots_and_tables()
+    # problem3 = OptimizationProblem(booth)
+    # result3 = Results(problem3, name = "Booth")
+    # result3.show_plots_and_tables()
     
-    problem4 = OptimizationProblem(sphere)
-    result4 = Results(problem4, name = "Sphere")
-    result4.show_plots_and_tables()
+    # problem4 = OptimizationProblem(sphere)
+    # result4 = Results(problem4, name = "Sphere")
+    # result4.show_plots_and_tables()
 
     problem5 = OptimizationProblem(beale)
     result5 = Results(problem5, name = "Beale")
