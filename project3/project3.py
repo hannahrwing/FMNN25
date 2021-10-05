@@ -14,7 +14,7 @@ def get_matrix_domain_2(delta_x):
     diag1 = [1 for x in range(nx * ny - 1)]
     diag1[0:nx] = 0 # typ nåt sånt
     diag1[-nx::] = 0 # typ nåt sånt
-    
+
     diag2 = [1 for x in range(nx * (ny - 1))]
     A = (np.diag(diag0) #main diag
             + np.diag(diag1,k=1) + np.diag(diag1,k=-1) #subdiag 1
