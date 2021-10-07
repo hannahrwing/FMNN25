@@ -28,7 +28,7 @@ def get_neumann(sol, delta_x, t_gamma_1, t_gamma_2):
     ny, nx = sol.shape
     
     derivative_l = (sol[0:math.floor(ny/2), 0] - t_gamma_1)/delta_x
-    derivative_r = (sol[0:math.floor(ny/2), -1] - t_gamma_2)/delta_x
+    derivative_r = (t_gamma_2 - sol[0:math.floor(ny/2), -1])/delta_x
     
     return derivative_l, derivative_r
 
@@ -38,10 +38,8 @@ def room_2(delta_x, t_gamma_1, t_gamma_2):
     t_normal = 15
     L = 1
     nx = int(1/delta_x - 1)
-    if nx % 2 == 0:
-        ny = 2 * L * nx + 1
-    else:
-        ny = 2 * L * nx
+    ny = 2 * L * nx + 1
+
     
     A = get_matrix_domain_2(delta_x, nx, ny)
     rhs = np.zeros(nx*ny)
