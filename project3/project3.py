@@ -7,13 +7,13 @@ from matplotlib.ticker import LinearLocator
 from matplotlib import cm
 
 def get_matrix_domain_2(delta_x, nx, ny):
-    main_diag = [-4 for x in range(nx * ny)]     
+    main_diag = -4*np.ones(nx*ny)     
     sub_diag = np.ones(nx * ny - 1)
     sup_diag = np.ones(nx * ny - 1)
     sub_diag[nx-1:nx*ny-nx+2:nx] = 0 
     sup_diag[nx-1::nx] = 0 
-
-    diag2 = [1 for x in range(nx * (ny - 1))]
+    diag2 = np.ones(nx*(ny-1))
+    
     A = (np.diag(main_diag) #main diag
             + np.diag(sup_diag,k=1) + np.diag(sub_diag,k=-1) #subdiag 1
             + np.diag(diag2, k = -nx) + np.diag(diag2, k = nx)) *  1/delta_x**2 #subdiag 2
