@@ -20,6 +20,27 @@ def get_matrix_domain_2(delta_x, nx, ny):
     
     return A
 
+def get_matrix_domain_1(delta_x, nx, ny):
+    A0 = get_matrix_domain_2(delta_x, nx, ny) * delta_x**2
+    #A0[nx-1::nx] = [1 for x in range(len(A0[0]))]
+    #A0[nx-1::nx,nx-1::nx] = -3
+    # A0[nx-2::nx] = [1 for x in range(len(A0[0]))]
+    for i in np.arange(nx-1,len(A0[1]), nx):
+        A0[i][i] = -3
+        
+    
+    return A0    
+
+def get_matrix_domain_3(delta_x, nx, ny):
+    A0 = get_matrix_domain_2(delta_x, nx, ny) * delta_x**2
+    #A0[nx-1::nx] = [1 for x in range(len(A0[0]))]
+    #A0[nx-1::nx,nx-1::nx] = -3
+    # A0[nx-2::nx] = [1 for x in range(len(A0[0]))]
+    for i in np.arange(0,len(A0[1]), nx):
+        A0[i][i] = -3
+        
+    
+    return A0   
 
 def get_neumann(sol, delta_x, t_gamma_1, t_gamma_2):
     ##### finite diff
@@ -65,13 +86,14 @@ def room_2(delta_x, t_gamma_1, t_gamma_2):
 
 
 if __name__ == '__main__':
-    delta_x = float(1/20)
+    delta_x = float(1/4)
     t_gamma_1 = 20
     t_gamma_2 = 20
     
     room_2_sol = room_2(delta_x, t_gamma_1, t_gamma_2)
     iteration = get_neumann(room_2_sol, delta_x, t_gamma_1, t_gamma_2)
-    print(iteration)
-    
+    #print(iteration)
+    print(get_matrix_domain_1(delta_x, int(1/delta_x), int(1/delta_x - 1)))
+    print(get_matrix_domain_3(delta_x, int(1/delta_x), int(1/delta_x - 1)))
     
     
