@@ -84,6 +84,14 @@ def room_2(delta_x, t_gamma_1, t_gamma_2):
     
     return solution
 
+def room_1(delta_x, derivative):
+    t_H = 40
+    t_normal = 15
+    
+    A = get_matrix_domain_1(delta_x, int(1/delta_x), int(1/delta_x - 1))
+    
+    
+
 
 if __name__ == '__main__':
     delta_x = float(1/4)
@@ -92,6 +100,8 @@ if __name__ == '__main__':
     
     room_2_sol = room_2(delta_x, t_gamma_1, t_gamma_2)
     iteration = get_neumann(room_2_sol, delta_x, t_gamma_1, t_gamma_2)
+    derivative_l, derivative_r = get_neumann(room_2_sol, delta_x, t_gamma_1, t_gamma_2)
+    
     #print(iteration)
     print(get_matrix_domain_1(delta_x, int(1/delta_x), int(1/delta_x - 1)))
     print(get_matrix_domain_3(delta_x, int(1/delta_x), int(1/delta_x - 1)))
