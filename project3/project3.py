@@ -21,31 +21,20 @@ def get_matrix_domain_2(delta_x, nx, ny):
     return A
 
 def get_matrix_domain_1(delta_x, nx, ny):
-    A0 = get_matrix_domain_2(delta_x, nx, ny) * delta_x**2
-    #A0[nx-1::nx] = [1 for x in range(len(A0[0]))]
-    #A0[nx-1::nx,nx-1::nx] = -3
-    # A0[nx-2::nx] = [1 for x in range(len(A0[0]))]
+    A0 = get_matrix_domain_2(delta_x, nx, ny)
     for i in np.arange(nx-1,len(A0[1]), nx):
-        A0[i][i] = -3
-        
-    
+        A0[i][i] = -3/delta_x**2
+
     return A0    
 
 def get_matrix_domain_3(delta_x, nx, ny):
-    A0 = get_matrix_domain_2(delta_x, nx, ny) * delta_x**2
-    #A0[nx-1::nx] = [1 for x in range(len(A0[0]))]
-    #A0[nx-1::nx,nx-1::nx] = -3
-    # A0[nx-2::nx] = [1 for x in range(len(A0[0]))]
+    A0 = get_matrix_domain_2(delta_x, nx, ny) 
     for i in np.arange(0,len(A0[1]), nx):
-        A0[i][i] = -3
-        
+        A0[i][i] = -3/delta_x**2
     
     return A0   
 
 def get_neumann(sol, delta_x, t_gamma_1, t_gamma_2):
-    ##### finite diff
-    # send solution + RV to get neumann 
-    # diff between RV and inner point 
     ny, nx = sol.shape
     
     derivative_l = (sol[0:math.floor(ny/2), 0] - t_gamma_1)/delta_x
@@ -53,7 +42,7 @@ def get_neumann(sol, delta_x, t_gamma_1, t_gamma_2):
     
     return derivative_l, derivative_r
 
-def room_2(delta_x, t_gamma_1, t_gamma_2):
+def domain_2(delta_x, t_gamma_1, t_gamma_2):
     t_wf = 5
     t_H = 40
     t_normal = 15
@@ -75,7 +64,7 @@ def room_2(delta_x, t_gamma_1, t_gamma_2):
 
     solution = l.solve(A,rhs).reshape(ny, nx)
     
-    # plot 
+    # plot domain 2
     X, Y = np.meshgrid(np.linspace(0,1,nx), np.linspace(0,2,ny))
     fig = plt.figure(dpi=600)
     ax = fig.add_subplot(111, projection='3d')
@@ -84,26 +73,69 @@ def room_2(delta_x, t_gamma_1, t_gamma_2):
     
     return solution
 
-def room_1(delta_x, derivative):
+def domain_1(delta_x, derivative):
     t_H = 40
     t_normal = 15
+    nx = int(1/delta_x)
     
-    A = get_matrix_domain_1(delta_x, int(1/delta_x), int(1/delta_x - 1))
-    
-    
+    ny = int(1/delta_x-1)
 
+    A = get_matrix_domain_1(delta_x, nx, ny)
+    rhs = np.zeros(nx * ny)
+    
+    rhs[0::nx] -= t_H / delta_x**2 #left
+    rhs[nx-1::nx] -= derivative / delta_x #right
+    rhs[0:nx] -= t_normal / delta_x**2 #bottom
+    rhs[-nx::] -= t_normal / delta_x**2 #top
+    
+    solution = l.solve(A,rhs).reshape(ny, nx)
+    
+    # plot domain 1
+    X, Y = np.meshgrid(np.linspace(0,1,nx), np.linspace(0,1,ny))
+    fig = plt.figure(dpi=600)
+    ax = fig.add_subplot(111, projection='3d')
+    surf = ax.plot_surface(X, Y, solution, cmap=cm.coolwarm, linewidth=0)
+    plt.show()
+    
+    
+def domain_3(delta_x, derivative):
+    t_H = 40
+    t_normal = 15
+    nx = int(1/delta_x)
+    
+    ny = int(1/delta_x-1)
+
+    A = get_matrix_domain_1(delta_x, nx, ny)
+    rhs = np.zeros(nx * ny)
+    
+    rhs[0::nx] -= derivative / delta_x #left
+    rhs[nx-1::nx] -= t_H / delta_x**2 # right
+    rhs[0:nx] -= t_normal / delta_x**2 #bottom
+    rhs[-nx::] -= t_normal / delta_x**2 #top
+    
+    solution = l.solve(A,rhs).reshape(ny, nx)
+    
+    # plot domain 3
+    X, Y = np.meshgrid(np.linspace(0,1,nx), np.linspace(0,1,ny))
+    fig = plt.figure(dpi=600)
+    ax = fig.add_subplot(111, projection='3d')
+    surf = ax.plot_surface(X, Y, solution, cmap=cm.coolwarm, linewidth=0)
+    plt.show()
 
 if __name__ == '__main__':
-    delta_x = float(1/4)
+    delta_x = float(1/20)
     t_gamma_1 = 20
     t_gamma_2 = 20
     
-    room_2_sol = room_2(delta_x, t_gamma_1, t_gamma_2)
-    iteration = get_neumann(room_2_sol, delta_x, t_gamma_1, t_gamma_2)
-    derivative_l, derivative_r = get_neumann(room_2_sol, delta_x, t_gamma_1, t_gamma_2)
+    domain_2_sol = domain_2(delta_x, t_gamma_1, t_gamma_2)
+    derivative_l, derivative_r = get_neumann(domain_2_sol, delta_x, t_gamma_1, t_gamma_2)
     
-    #print(iteration)
-    print(get_matrix_domain_1(delta_x, int(1/delta_x), int(1/delta_x - 1)))
-    print(get_matrix_domain_3(delta_x, int(1/delta_x), int(1/delta_x - 1)))
+    domain_1_sol = domain_1(delta_x, derivative_l)
+    print(get_matrix_domain_1(delta_x, int(1/delta_x), int(1/delta_x - 1)) * delta_x**2)
+    
+    domain_1_sol = domain_3(delta_x, derivative_r)
+    print(get_matrix_domain_3(delta_x, int(1/delta_x), int(1/delta_x - 1)) * delta_x**2)
+    
+    
     
     
