@@ -31,6 +31,7 @@ def get_matrix_domain_3(delta_x, nx, ny):
     A0 = get_matrix_domain_2(delta_x, nx, ny) 
     for i in np.arange(0,len(A0[1]), nx):
         A0[i][i] = -3/delta_x**2
+        
     
     return A0   
 
@@ -38,7 +39,7 @@ def get_neumann(sol, delta_x, t_gamma_1, t_gamma_2):
     ny, nx = sol.shape
     
     derivative_l = (sol[0:math.floor(ny/2), 0] - t_gamma_1)/delta_x
-    derivative_r = (t_gamma_2 - sol[0:math.floor(ny/2), -1])/delta_x
+    derivative_r = (sol[math.floor(ny/2)+1::, -1] - t_gamma_2)/delta_x
     
     return derivative_l, derivative_r
 
@@ -105,7 +106,7 @@ def domain_3(delta_x, derivative):
     
     ny = int(1/delta_x-1)
 
-    A = get_matrix_domain_1(delta_x, nx, ny)
+    A = get_matrix_domain_3(delta_x, nx, ny)
     rhs = np.zeros(nx * ny)
     
     rhs[0::nx] -= derivative / delta_x #left
@@ -133,7 +134,7 @@ if __name__ == '__main__':
     domain_1_sol = domain_1(delta_x, derivative_l)
     print(get_matrix_domain_1(delta_x, int(1/delta_x), int(1/delta_x - 1)) * delta_x**2)
     
-    domain_1_sol = domain_3(delta_x, derivative_r)
+    domain_3_sol = domain_3(delta_x, derivative_r)
     print(get_matrix_domain_3(delta_x, int(1/delta_x), int(1/delta_x - 1)) * delta_x**2)
     
     
