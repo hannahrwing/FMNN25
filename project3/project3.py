@@ -5,6 +5,7 @@ import math
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import LinearLocator
 from matplotlib import cm
+from mpi4py import MPI
 
 def get_matrix_domain_2(delta_x, nx, ny):
     main_diag = -4*np.ones(nx*ny)     
@@ -58,7 +59,9 @@ def domain_2(delta_x, t_gamma_1, t_gamma_2):
     rhs[0:int(ny/2)*nx - nx+1:nx] -= t_gamma_1 #bottom left
     rhs[int(ny/2)*nx::nx] -= t_normal #top left
     rhs[nx-1:int(ny/2)*nx:nx] -= t_normal #bottom right
-    rhs[int(ny/2)*nx + nx -1:: nx] -= t_gamma_2 #top right
+    rhs[math.ceil(ny*nx/2) + nx -1:: nx] -= t_gamma_2 #top right
+    # THIS IS A CHOKE MAYBE FROM BILLY HE IS BAD VERY BAD LETS KICK HIM HE HAS SMALL ANACONDA
+    
     rhs[0:nx] -= t_wf #bottom
     rhs[-nx ::] -= t_H #top
     rhs *= 1/delta_x**2
@@ -66,11 +69,11 @@ def domain_2(delta_x, t_gamma_1, t_gamma_2):
     solution = l.solve(A,rhs).reshape(ny, nx)
     
     # plot domain 2
-    X, Y = np.meshgrid(np.linspace(0,1,nx), np.linspace(0,2,ny))
-    fig = plt.figure(dpi=600)
-    ax = fig.add_subplot(111, projection='3d')
-    surf = ax.plot_surface(X, Y, solution, cmap=cm.coolwarm, linewidth=0)
-    plt.show()
+    # X, Y = np.meshgrid(np.linspace(0,1,nx), np.linspace(0,2,ny))
+    # fig = plt.figure(dpi=600)
+    # ax = fig.add_subplot(111, projection='3d')
+    # surf = ax.plot_surface(X, Y, solution, cmap=cm.coolwarm, linewidth=0)
+    # plt.show()
     
     return solution
 
@@ -92,11 +95,11 @@ def domain_1(delta_x, derivative):
     solution = l.solve(A,rhs).reshape(ny, nx)
     
     # plot domain 1
-    X, Y = np.meshgrid(np.linspace(0,1,nx), np.linspace(0,1,ny))
-    fig = plt.figure(dpi=600)
-    ax = fig.add_subplot(111, projection='3d')
-    surf = ax.plot_surface(X, Y, solution, cmap=cm.coolwarm, linewidth=0)
-    plt.show()
+    # X, Y = np.meshgrid(np.linspace(0,1,nx), np.linspace(0,1,ny))
+    # fig = plt.figure(dpi=600)
+    # ax = fig.add_subplot(111, projection='3d')
+    # surf = ax.plot_surface(X, Y, solution, cmap=cm.coolwarm, linewidth=0)
+    # plt.show()
     
     
 def domain_3(delta_x, derivative):
@@ -117,25 +120,112 @@ def domain_3(delta_x, derivative):
     solution = l.solve(A,rhs).reshape(ny, nx)
     
     # plot domain 3
-    X, Y = np.meshgrid(np.linspace(0,1,nx), np.linspace(0,1,ny))
-    fig = plt.figure(dpi=600)
-    ax = fig.add_subplot(111, projection='3d')
-    surf = ax.plot_surface(X, Y, solution, cmap=cm.coolwarm, linewidth=0)
-    plt.show()
+    # X, Y = np.meshgrid(np.linspace(0,1,nx), np.linspace(0,1,ny))
+    # fig = plt.figure(dpi=600)
+    # ax = fig.add_subplot(111, projection='3d')
+    # surf = ax.plot_surface(X, Y, solution, cmap=cm.coolwarm, linewidth=0)
+    # plt.show()
 
 if __name__ == '__main__':
     delta_x = float(1/20)
+    nx2 = int(1/delta_x-1)
+    ny2 = 2*nx2+1
+    
+    nx13 = nx2+1
+    ny13 = nx2
+    
     t_gamma_1 = 20
     t_gamma_2 = 20
     
-    domain_2_sol = domain_2(delta_x, t_gamma_1, t_gamma_2)
-    derivative_l, derivative_r = get_neumann(domain_2_sol, delta_x, t_gamma_1, t_gamma_2)
+    omega = 0.8
     
-    domain_1_sol = domain_1(delta_x, derivative_l)
-    print(get_matrix_domain_1(delta_x, int(1/delta_x), int(1/delta_x - 1)) * delta_x**2)
+    sol_old1, sol_old2, sol_old3 = 0,0,0
     
-    domain_3_sol = domain_3(delta_x, derivative_r)
-    print(get_matrix_domain_3(delta_x, int(1/delta_x), int(1/delta_x - 1)) * delta_x**2)
+    comm = MPI.Comm.Clone(MPI.COMM_WORLD)
+    rank = comm.Get_rank()
+    
+    for i in range(9):
+        
+        if rank == 1:
+            domain_2_sol = domain_2(delta_x, t_gamma_1, t_gamma_2)
+            derivative_l, derivative_r = get_neumann(domain_2_sol, delta_x, t_gamma_1, t_gamma_2)
+            
+            comm.Send([derivative_l, MPI.DOUBLE], dest=0, tag=69)
+            comm.Send([derivative_r, MPI.DOUBLE], dest=2, tag=420)
+            
+        if rank == 0:
+            derivative = np.empty(math.floor(ny2/2), dtype=float)
+            comm.Recv(derivative, source=1, tag=69)
+            
+            domain_1_sol = domain_1(delta_x, derivative)
+            comm.Send([domain_1_sol, MPI.DOUBLE], dest=1, tag=666)
+            
+        if rank == 2:
+            derivative = np.empty(math.floor(ny2/2), dtype=float)
+            comm.Recv(derivative, source=1, tag=420)
+            
+            domain_3_sol = domain_3(delta_x, derivative)
+            comm.Send([domain_3_sol, MPI.DOUBLE], dest=1, tag=1)
+        
+        if rank ==  1:
+            domain_1_sol = np.empty((ny13,nx13), dtype=float)
+            domain_3_sol = np.empty((ny13,nx13), dtype=float)
+            comm.Recv([domain_1_sol, MPI.DOUBLE], source=0, tag=666)
+            comm.Recv([domain_3_sol, MPI.DOUBLE], source=2, tag=1)
+            
+            if not i == 0:
+                domain_1_sol = omega*domain_1_sol + (1-omega)*sol_old1
+                domain_2_sol = omega*domain_2_sol + (1-omega)*sol_old2
+                domain_3_sol = omega*domain_3_sol + (1-omega)*sol_old3
+            sol_old1, sol_old2, sol_old3 = domain_1_sol, domain_2_sol, domain_3_sol
+            
+            t_gamma_1 = domain_1_sol[:,-1]
+            t_gamma_2 = domain_3_sol[:,0]
+            
+            
+        
+        
+        
+        
+        
+    #####     initial case   #####
+
+#processor 1
+# calculate u0 in room 2 with default gamma 1 and gamma 2
+# send neumann to processor 0 and 2
+
+#processor 0 and 2
+# recieve neumann from processor 1
+# calculate u0 in room 1 and room 3 with neumann from processor 1
+# send temperatures at gamma 1 and gamma 2 to processor 1
+
+#####    loop    ####
+
+#processor 1
+# extract temp. at gamma 1 and gamma 2 from previous u
+# calculate u(k+1) in room 2
+# send neumann to processor 0 and 2
+
+#processor 0 and 2
+# recieve neumann from 0 and 2
+# calculate u(k+1) in room 1 and 3 with neumann
+# send all temperatures to processor 1
+
+#processor 1
+# recieve all temperatures from processors 0 and 2
+# do relaxation
+
+        
+        
+    
+    # domain_2_sol = domain_2(delta_x, t_gamma_1, t_gamma_2)
+    # derivative_l, derivative_r = get_neumann(domain_2_sol, delta_x, t_gamma_1, t_gamma_2)
+    
+    # domain_1_sol = domain_1(delta_x, derivative_l)
+    # print(get_matrix_domain_1(delta_x, int(1/delta_x), int(1/delta_x - 1)) * delta_x**2)
+    
+    # domain_3_sol = domain_3(delta_x, derivative_r)
+    # print(get_matrix_domain_3(delta_x, int(1/delta_x), int(1/delta_x - 1)) * delta_x**2)
     
     
     
