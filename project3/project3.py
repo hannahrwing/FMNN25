@@ -188,7 +188,7 @@ def mpi():
             t_gamma_1 = domain_1_sol[:,-1]
             t_gamma_2 = domain_3_sol[:,0]
                 
-               
+    if rank == 1:      
         sols = [domain_1_sol, domain_2_sol, domain_3_sol]
         print(sols)
         plotter = Plotter(sols)()
@@ -226,7 +226,7 @@ def non_mpi():
     
     
 if __name__ == '__main__':
-    non_mpi()
+    mpi()
         
         
     #####     initial case   #####
