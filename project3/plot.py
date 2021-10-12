@@ -35,7 +35,7 @@ class Plotter():
         big[nx1:nx1 + self.sols[2].shape[0], nx1+nx2 : nx1+nx2+self.sols[2].shape[1]] += self.sols[2]
         
         
-        X, Y = np.meshgrid(np.linspace(0,1,big.shape[1]), np.linspace(0,1,big.shape[0]))
+        X, Y = np.meshgrid(np.linspace(0,3,big.shape[1]), np.linspace(0,2,big.shape[0]))
         big[big == 0.0] = np.NaN
         fig = plt.figure(dpi=600)
 

@@ -198,8 +198,8 @@ def non_mpi():
     nx13 = nx2+1
     ny13 = nx2
     
-    t_gamma_1 = 20
-    t_gamma_2 = 20
+    t_gamma_1 = 0
+    t_gamma_2 = 0
     
     omega = 0.8
     
@@ -209,17 +209,18 @@ def non_mpi():
         domain_2_sol = domain_2(delta_x, t_gamma_1, t_gamma_2)
         derivative_l, derivative_r = get_neumann(domain_2_sol, delta_x, t_gamma_1, t_gamma_2)
         domain_1_sol = domain_1(delta_x, derivative_l)
-        
         domain_3_sol = domain_3(delta_x, derivative_r)
+        sols = sols = [domain_1_sol, domain_2_sol, domain_3_sol]
+        plotter = Plotter(sols)()
         if i != 0:
             domain_1_sol = omega*domain_1_sol + (1-omega)*sol_old1
             domain_2_sol = omega*domain_2_sol + (1-omega)*sol_old2
             domain_3_sol = omega*domain_3_sol + (1-omega)*sol_old3
-        sol_old1, sol_old2, sol_old3 = domain_1_sol, domain_2_sol, domain_3_sol
+            
+        sol_old1, sol_old2, sol_old3 = domain_1_sol.copy(), domain_2_sol.copy(), domain_3_sol.copy()
         t_gamma_1 = domain_1_sol[:,-1]
         t_gamma_2 = domain_3_sol[:,0]
-        sols = sols = [domain_1_sol, domain_2_sol, domain_3_sol]
-        plotter = Plotter(sols)()
+        
     
     
 if __name__ == '__main__':
