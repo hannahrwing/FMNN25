@@ -5,7 +5,8 @@ import math
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import LinearLocator
 from matplotlib import cm
-from mpi4py import MPI
+#from mpi4py import MPI
+from plot import Plotter
 
 def get_matrix_domain_2(delta_x, nx, ny):
     main_diag = -4*np.ones(nx*ny)     
@@ -100,6 +101,7 @@ def domain_1(delta_x, derivative):
     # ax = fig.add_subplot(111, projection='3d')
     # surf = ax.plot_surface(X, Y, solution, cmap=cm.coolwarm, linewidth=0)
     # plt.show()
+    return solution
     
     
 def domain_3(delta_x, derivative):
@@ -125,8 +127,10 @@ def domain_3(delta_x, derivative):
     # ax = fig.add_subplot(111, projection='3d')
     # surf = ax.plot_surface(X, Y, solution, cmap=cm.coolwarm, linewidth=0)
     # plt.show()
+    return solution
 
-if __name__ == '__main__':
+
+def mpi():
     delta_x = float(1/20)
     nx2 = int(1/delta_x-1)
     ny2 = 2*nx2+1
@@ -144,7 +148,7 @@ if __name__ == '__main__':
     comm = MPI.Comm.Clone(MPI.COMM_WORLD)
     rank = comm.Get_rank()
     
-    for i in range(9):
+    for i in range(1):
         
         if rank == 1:
             domain_2_sol = domain_2(delta_x, t_gamma_1, t_gamma_2)
@@ -181,11 +185,45 @@ if __name__ == '__main__':
             
             t_gamma_1 = domain_1_sol[:,-1]
             t_gamma_2 = domain_3_sol[:,0]
-            
-            
+                
+               
+        sols = [domain_1_sol, domain_2_sol, domain_3_sol]
+        print(sols)
+        plotter = Plotter(sols)()
         
+def non_mpi():
+    delta_x = float(1/20)
+    nx2 = int(1/delta_x-1)
+    ny2 = 2*nx2+1
+    nx13 = nx2+1
+    ny13 = nx2
+    
+    t_gamma_1 = 20
+    t_gamma_2 = 20
+    
+    omega = 0.8
+    
+    sol_old1, sol_old2, sol_old3 = 0,0,0
+    
+    for i in range(1):
+        domain_2_sol = domain_2(delta_x, t_gamma_1, t_gamma_2)
+        derivative_l, derivative_r = get_neumann(domain_2_sol, delta_x, t_gamma_1, t_gamma_2)
+        domain_1_sol = domain_1(delta_x, derivative_l)
         
-        
+        domain_3_sol = domain_3(delta_x, derivative_r)
+        if i != 0:
+            domain_1_sol = omega*domain_1_sol + (1-omega)*sol_old1
+            domain_2_sol = omega*domain_2_sol + (1-omega)*sol_old2
+            domain_3_sol = omega*domain_3_sol + (1-omega)*sol_old3
+        sol_old1, sol_old2, sol_old3 = domain_1_sol, domain_2_sol, domain_3_sol
+        t_gamma_1 = domain_1_sol[:,-1]
+        t_gamma_2 = domain_3_sol[:,0]
+        sols = sols = [domain_1_sol, domain_2_sol, domain_3_sol]
+        plotter = Plotter(sols)()
+    
+    
+if __name__ == '__main__':
+    non_mpi()
         
         
     #####     initial case   #####

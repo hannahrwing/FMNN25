@@ -42,7 +42,10 @@ class Plotter():
         ax = fig.add_subplot(111)
         
         
+        
        
         cp = ax.contourf(X,Y, big)
+        cbar = fig.colorbar(cp)
+        cbar.ax.set_ylabel('verbosity coefficient')
         
         plt.show()
