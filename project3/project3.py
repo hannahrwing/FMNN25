@@ -62,20 +62,12 @@ def domain_2(delta_x, t_gamma_1, t_gamma_2):
     rhs[int(ny/2)*nx::nx] -= t_normal #top left
     rhs[nx-1:int(ny/2)*nx:nx] -= t_normal #bottom right
     rhs[math.ceil(ny/2)*nx + nx-1:: nx] -= t_gamma_2 #top right
-    # THIS IS A CHOKE MAYBE FROM BILLY HE IS BAD VERY BAD LETS KICK HIM HE HAS SMALL ANACONDA
     
     rhs[0:nx] -= t_wf #bottom
     rhs[-nx ::] -= t_H #top
     rhs *= 1/delta_x**2
 
     solution = l.solve(A,rhs).reshape(ny, nx)
-    
-    # plot domain 2
-    # X, Y = np.meshgrid(np.linspace(0,1,nx), np.linspace(0,2,ny))
-    # fig = plt.figure(dpi=600)
-    # ax = fig.add_subplot(111, projection='3d')
-    # surf = ax.plot_surface(X, Y, solution, cmap=cm.coolwarm, linewidth=0)
-    # plt.show()
     
     return solution
 
@@ -95,13 +87,6 @@ def domain_1(delta_x, derivative):
     rhs[-nx::] -= t_normal / delta_x**2 #top
     
     solution = l.solve(A,rhs).reshape(ny, nx)
-    
-    # plot domain 1
-    # X, Y = np.meshgrid(np.linspace(0,1,nx), np.linspace(0,1,ny))
-    # fig = plt.figure(dpi=600)
-    # ax = fig.add_subplot(111, projection='3d')
-    # surf = ax.plot_surface(X, Y, solution, cmap=cm.coolwarm, linewidth=0)
-    # plt.show()
     return solution
     
     
@@ -121,13 +106,6 @@ def domain_3(delta_x, derivative):
     rhs[-nx::] -= t_normal / delta_x**2 #top
     
     solution = l.solve(A,rhs).reshape(ny, nx)
-    
-    # plot domain 3
-    # X, Y = np.meshgrid(np.linspace(0,1,nx), np.linspace(0,1,ny))
-    # fig = plt.figure(dpi=600)
-    # ax = fig.add_subplot(111, projection='3d')
-    # surf = ax.plot_surface(X, Y, solution, cmap=cm.coolwarm, linewidth=0)
-    # plt.show()
     return solution
 
 
@@ -226,48 +204,8 @@ def non_mpi():
     
     
 if __name__ == '__main__':
-    mpi()
+    non_mpi()
         
-        
-    #####     initial case   #####
 
-#processor 1
-# calculate u0 in room 2 with default gamma 1 and gamma 2
-# send neumann to processor 0 and 2
 
-#processor 0 and 2
-# recieve neumann from processor 1
-# calculate u0 in room 1 and room 3 with neumann from processor 1
-# send temperatures at gamma 1 and gamma 2 to processor 1
-
-#####    loop    ####
-
-#processor 1
-# extract temp. at gamma 1 and gamma 2 from previous u
-# calculate u(k+1) in room 2
-# send neumann to processor 0 and 2
-
-#processor 0 and 2
-# recieve neumann from 0 and 2
-# calculate u(k+1) in room 1 and 3 with neumann
-# send all temperatures to processor 1
-
-#processor 1
-# recieve all temperatures from processors 0 and 2
-# do relaxation
-
-        
-        
-    
-    # domain_2_sol = domain_2(delta_x, t_gamma_1, t_gamma_2)
-    # derivative_l, derivative_r = get_neumann(domain_2_sol, delta_x, t_gamma_1, t_gamma_2)
-    
-    # domain_1_sol = domain_1(delta_x, derivative_l)
-    # print(get_matrix_domain_1(delta_x, int(1/delta_x), int(1/delta_x - 1)) * delta_x**2)
-    
-    # domain_3_sol = domain_3(delta_x, derivative_r)
-    # print(get_matrix_domain_3(delta_x, int(1/delta_x), int(1/delta_x - 1)) * delta_x**2)
-    
-    
-    
     
