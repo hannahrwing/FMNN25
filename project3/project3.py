@@ -5,7 +5,7 @@ import math
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.ticker import LinearLocator
 from matplotlib import cm
-#from mpi4py import MPI
+#
 from plot import Plotter
 
 def get_matrix_domain_2(delta_x, nx, ny):
@@ -55,12 +55,13 @@ def domain_2(delta_x, t_gamma_1, t_gamma_2):
 
     
     A = get_matrix_domain_2(delta_x, nx, ny)
+    print(A)
     rhs = np.zeros(nx*ny)
     
     rhs[0:int(ny/2)*nx - nx+1:nx] -= t_gamma_1 #bottom left
     rhs[int(ny/2)*nx::nx] -= t_normal #top left
     rhs[nx-1:int(ny/2)*nx:nx] -= t_normal #bottom right
-    rhs[math.ceil(ny*nx/2) + nx -1:: nx] -= t_gamma_2 #top right
+    rhs[math.ceil(ny/2)*nx + nx-1:: nx] -= t_gamma_2 #top right
     # THIS IS A CHOKE MAYBE FROM BILLY HE IS BAD VERY BAD LETS KICK HIM HE HAS SMALL ANACONDA
     
     rhs[0:nx] -= t_wf #bottom
@@ -131,6 +132,7 @@ def domain_3(delta_x, derivative):
 
 
 def mpi():
+    from mpi4py import MPI
     delta_x = float(1/20)
     nx2 = int(1/delta_x-1)
     ny2 = 2*nx2+1
@@ -148,7 +150,7 @@ def mpi():
     comm = MPI.Comm.Clone(MPI.COMM_WORLD)
     rank = comm.Get_rank()
     
-    for i in range(1):
+    for i in range(10):
         
         if rank == 1:
             domain_2_sol = domain_2(delta_x, t_gamma_1, t_gamma_2)
@@ -198,14 +200,14 @@ def non_mpi():
     nx13 = nx2+1
     ny13 = nx2
     
-    t_gamma_1 = 0
-    t_gamma_2 = 0
+    t_gamma_1 = 10
+    t_gamma_2 = 10
     
     omega = 0.8
     
     sol_old1, sol_old2, sol_old3 = 0,0,0
     
-    for i in range(1):
+    for i in range(10):
         domain_2_sol = domain_2(delta_x, t_gamma_1, t_gamma_2)
         derivative_l, derivative_r = get_neumann(domain_2_sol, delta_x, t_gamma_1, t_gamma_2)
         domain_1_sol = domain_1(delta_x, derivative_l)
