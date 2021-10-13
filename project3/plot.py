@@ -51,7 +51,7 @@ class Plotter():
         
         X, Y = np.meshgrid(np.linspace(0,3,big.shape[1]), np.linspace(0,2,big.shape[0]))
         big[big == 0.0] = np.NaN
-        fig = plt.figure(dpi=600)
+        fig = plt.figure(dpi=600, figsize=(3, 3))
 
         ax = fig.add_subplot(111)
         cp = ax.contourf(X,Y, big, cmap=cm.coolwarm)

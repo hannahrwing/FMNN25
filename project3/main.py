@@ -60,7 +60,6 @@ def domain_3(delta_x, derivative, t_H = 40, t_normal = 15):
     solution = l.solve(A,rhs).reshape(ny, nx)
     return solution
 
-
 def mpi(delta_x, t_H = 40, t_normal = 15, t_wf = 5, omega = 0.8):
     from mpi4py import MPI
     nx2 = int(1/delta_x-1)
@@ -145,7 +144,6 @@ def non_mpi(delta_x, num_iterations = 10, t_H = 40,t_normal = 15, t_wf = 5, omeg
     plotter = Plotter(sols)
     plotter()
         
-    
 if __name__ == '__main__':
     delta_x = 1/20
     parser = argparse.ArgumentParser()
