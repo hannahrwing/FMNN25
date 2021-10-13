@@ -22,20 +22,18 @@ def get_matrix_domain_2(delta_x, nx, ny):
     
     return A
 
-def get_matrix_domain_1(delta_x, nx, ny):
+def get_matrix_domain_outer(delta_x, nx, ny, domain_1 = True):
     A0 = get_matrix_domain_2(delta_x, nx, ny)
-    for i in np.arange(nx-1,len(A0[1]), nx):
-        A0[i][i] = -3/delta_x**2
-
-    return A0    
-
-def get_matrix_domain_3(delta_x, nx, ny):
-    A0 = get_matrix_domain_2(delta_x, nx, ny) 
-    for i in np.arange(0,len(A0[1]), nx):
-        A0[i][i] = -3/delta_x**2
-        
     
-    return A0   
+    if domain_1: 
+        index = np.arange(nx-1, nx*ny, nx)
+    else: 
+        index = np.arange(0, nx*ny, nx)
+        
+    A0[index, index] = -3/delta_x**2
+
+    return A0       
+
 
 def get_neumann(sol, delta_x, t_gamma_1, t_gamma_2):
     ny, nx = sol.shape
@@ -78,7 +76,7 @@ def domain_1(delta_x, derivative):
     
     ny = int(1/delta_x-1)
 
-    A = get_matrix_domain_1(delta_x, nx, ny)
+    A = get_matrix_domain_outer(delta_x, nx, ny, domain_1 = True)
     rhs = np.zeros(nx * ny)
     
     rhs[0::nx] -= t_H / delta_x**2 #left
@@ -97,7 +95,7 @@ def domain_3(delta_x, derivative):
     
     ny = int(1/delta_x-1)
 
-    A = get_matrix_domain_3(delta_x, nx, ny)
+    A = get_matrix_domain_outer(delta_x, nx, ny, domain_1 = False)
     rhs = np.zeros(nx * ny)
     
     rhs[0::nx] -= derivative / delta_x #left
@@ -204,7 +202,7 @@ def non_mpi():
     
     
 if __name__ == '__main__':
-    non_mpi()
+    mpi()
         
 
 

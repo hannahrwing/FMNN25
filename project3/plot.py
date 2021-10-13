@@ -6,11 +6,7 @@ Created on Mon Oct 11 09:36:29 2021
 @author: nils
 """
 import numpy as np
-import scipy.linalg as l
 import matplotlib.pyplot as plt
-import math
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.ticker import LinearLocator
 from matplotlib import cm
 
 class Plotter():
@@ -58,10 +54,6 @@ class Plotter():
         fig = plt.figure(dpi=600)
 
         ax = fig.add_subplot(111)
-        
-        
-        
-        
         cp = ax.contourf(X,Y, big, cmap=cm.coolwarm)
         cbar = fig.colorbar(cp)
         cbar.ax.set_ylabel('Temperature [C]')
